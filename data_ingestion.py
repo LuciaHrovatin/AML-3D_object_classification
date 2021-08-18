@@ -1,9 +1,18 @@
 import json
+import re
+from typing import List
+import pandas as pd
+import matplotlib.pyplot as plt
 import requests
 import os
 from zipfile import ZipFile
 import numpy as np
 import cv2
+from shapely.geometry import box
+from shapely.geometry import Polygon
+from shapely.geometry import LineString
+from shapely.ops import split
+from tqdm import tqdm
 
 #dcd de ef unzip_file(url: str, target_path: str):
     #response = requests.get(url, stream=True)
@@ -79,36 +88,73 @@ def bbox_image(filename: str):
 
 def extract_objects(my_path: str):
     for element in os.listdir(my_path):
-        if element.endswith("[0-9]+.jpeg"):
-            print("Done")
+        if element.endswith(".jpeg") and element[-6].isnumeric():
             name_image = element.split("/")[-1]
-            im = cv2.imread(name_image)
-            boxes = bbox_image
+            im = cv2.imread(my_path + "/" + element, cv2.IMREAD_COLOR)
+            img_clone = im.copy()
+            boxes = bbox_image(name_image)
+            polylist = []
             for box in boxes:
-                print("Done")
-                for vertices in box[0]:
-                    min_x,max_x = 0, 0
-                    min_y, max_y = 0, 0
-                    if vertices[0] >= max_x:
+                min_x, max_x = boxes[box][0][0], boxes[box][0][0]
+                min_y, max_y = boxes[box][0][1], boxes[box][0][1]
+                for vertices in boxes[box]:
+                    if vertices[0] > max_x:
                         max_x = vertices[0]
-                    elif vertices[0] <= min_x:
+                    elif vertices[0] < min_x:
                         min_x = vertices[0]
-                    if vertices[1] >= max_y:
+                    if vertices[1] > max_y:
                         max_y = vertices[1]
-                    elif vertices[1] <= min_y:
+                    elif vertices[1] < min_y:
                         min_y = vertices[1]
-                    low_sx = min_x, min_y # lower bound left
-                    low_dx = max_x, min_y # lower bound right
-                    up_sx = min_x, max_y  # upper bound left
-                    up_dx = max_x, max_y  # upper bound right
-                rectangle = im[min_y:min_y + abs(max_y - min_y), min_x:min_x + abs(max_x - min_x)]
-                cv2.imshow(rectangle)
-                print("Done")
-                break
-
-extract_objects("./dataset/examples")
+                box_poly = Polygon([(min_x, min_y), (min_x, max_y),(max_x, min_y), (max_x, max_y)])
+                polylist.append(box_poly)
+        return polylist
+                #rectangle = img_clone[min_y:min_y + (max_y - min_y), min_x:min_x + (max_x - min_x)]
+                #cv2.imwrite(name_image + "_" + box + ".jpeg", rectangle)
 
 
+
+def intersection_list(polylist: set):
+    list_intersected = []
+    for element in range(len(polylist)//2):
+        r = polylist[element]
+        for el in range(len(polylist)//2, len(polylist)):
+            p = polylist[el]
+            if r.intersects(p):
+                list_intersected.append((el, element))
+    return list_intersected
+
+def slice_one(gdf, index):
+    inter = gdf.loc[gdf.intersects(gdf.iloc[index].geometry)]
+    if len(inter) == 1: return inter.geometry.values[0]
+    box_A = inter.loc[index].values[0]
+    inter = inter.drop(index, axis=0)
+    polys = []
+    for i in range(len(inter)):
+        box_B = inter.iloc[i].values[0]
+        polyA, *_ = slice_box(box_A, box_B)
+        polys.append(polyA)
+    return intersection_list(polys)
+
+def slice_box(box_A:Polygon, box_B:Polygon, margin=10, line_mult=10):
+    vec_AB = np.array([box_B.centroid.x - box_A.centroid.x, box_B.centroid.y - box_A.centroid.y])
+    vec_ABp = np.array([-(box_B.centroid.y - box_A.centroid.y), box_B.centroid.x - box_A.centroid.x])
+    vec_AB_norm = np.linalg.norm(vec_AB)
+    split_point = box_A.centroid + vec_AB/2 - (vec_AB/vec_AB_norm)*margin
+    line = LineString([split_point-line_mult*vec_ABp, split_point+line_mult*vec_ABp])
+    split_box = split(box_A, line)
+    if len(split_box) == 1: return split_box, None, line
+    is_center = [s.contains(box_A.centroid) for s in split_box]
+    where_is_center = np.argwhere(is_center).reshape(-1)[0]
+    where_not_center = np.argwhere(~np.array(is_center)).reshape(-1)[0]
+    split_box_center = split_box[where_is_center]
+    split_box_out = split_box[where_not_center]
+    return split_box_center, split_box_out, line
+
+
+
+
+print(intersection_list(extract_objects("./dataset/examples")))
 
 
 
