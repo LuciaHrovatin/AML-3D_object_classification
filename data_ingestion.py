@@ -109,6 +109,9 @@ def extract_objects(my_path: str):
 extract_objects("./dataset/examples")
 
 
-
-
-
+#random train/validation/test split
+from torch.utils import data
+f = open("./final_db.json",)
+master = data.Dataset(json.load(f))
+n = len(master)
+train_set, val_set, test_set = data.random_split(master, (0.7*n, 0.2*n, 0.1*n))
