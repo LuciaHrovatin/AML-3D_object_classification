@@ -15,13 +15,14 @@ from shapely.geometry import LineString
 from shapely.ops import split
 from tqdm import tqdm
 
-#dcd de ef unzip_file(url: str, target_path: str):
+#def unzip_file(url: str, target_path: str):
     #response = requests.get(url, stream=True)
     # handle = open(target_path, "wb")
     # for chunk in response.iter_content(chunk_size=512):
     #     if chunk:
     #         handle.write(chunk)
     # handle.close()
+# to unzip the dataset
 #with ZipFile("lego_dataset.zip", 'r') as zipObj:
     # Extract all the contents of zip file in current directory
 #    zipObj.extractall(path='dataset')

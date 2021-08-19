@@ -1,4 +1,4 @@
-# pip install --upgrade pip
+
 # pip install matplotlib tqdm torch opencv-python
 
 import os
