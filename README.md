@@ -1,5 +1,5 @@
 # Applied Machine Learning Project
-# 3D Object Classification employing PointNet
+## 3D Object Classification employing PointNet
 
 
 ## Project objective 
