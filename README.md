@@ -1,4 +1,5 @@
-# AML-3D_object_classification
+# Applied Machine Learning Project
+# 3D Object Classification employing PointNet
 
 
 ## Project objective 
