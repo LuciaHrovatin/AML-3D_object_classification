@@ -117,11 +117,11 @@ def extract_objects(my_path: str):
                         max_y = vertices[1]
                     elif vertices[1] < min_y and vertices[1] > 0 and vertices[0] < 1023:
                         min_y = vertices[1]
-                print("these:", min_y, min_y + (max_y - min_y), "and", min_x, min_x + (max_x - min_x))
-                im = cv2.imread(my_path , cv2.IMREAD_COLOR)
-                rectangle = im[min_y: min_y + (max_y - min_y), min_x : min_x + (max_x - min_x)]
-
-                cv2.imwrite(name_image + "_" + box + ".jpeg", rectangle)
+                if min_y != max_y and min_x != max_x:
+                    print("these:", min_y, min_y + (max_y - min_y), "and", min_x, min_x + (max_x - min_x))
+                    im = cv2.imread(my_path , cv2.IMREAD_COLOR)
+                    rectangle = im[min_y: min_y + (max_y - min_y), min_x : min_x + (max_x - min_x)]
+                    cv2.imwrite(name_image + "_" + box + ".jpeg", rectangle)
 
 
 
