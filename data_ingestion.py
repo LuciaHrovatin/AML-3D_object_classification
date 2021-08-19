@@ -8,6 +8,7 @@ import os
 from zipfile import ZipFile
 import numpy as np
 import cv2
+import shapely
 from shapely.geometry import box
 from shapely.geometry import Polygon
 from shapely.geometry import LineString
@@ -82,33 +83,45 @@ def bbox_image(filename: str):
             return print("Scene" + image + "is not present in the dataset.")
 
 
-
-#extract_json("./dataset/examples")
-#save_objects() # total of 30 different pieces
-
 def extract_objects(my_path: str):
-    for element in os.listdir(my_path):
-        if element.endswith(".jpeg") and element[-6].isnumeric():
-            name_image = element.split("/")[-1]
-            im = cv2.imread(my_path + "/" + element, cv2.IMREAD_COLOR)
-            img_clone = im.copy()
-            boxes = bbox_image(name_image)
-            polylist = []
-            for box in boxes:
-                min_x, max_x = boxes[box][0][0], boxes[box][0][0]
-                min_y, max_y = boxes[box][0][1], boxes[box][0][1]
-                for vertices in boxes[box]:
-                    if vertices[0] > max_x:
-                        max_x = vertices[0]
-                    elif vertices[0] < min_x:
-                        min_x = vertices[0]
-                    if vertices[1] > max_y:
-                        max_y = vertices[1]
-                    elif vertices[1] < min_y:
-                        min_y = vertices[1]
-                box_poly = Polygon([(min_x, min_y), (min_x, max_y),(max_x, min_y), (max_x, max_y)])
-                polylist.append(box_poly)
-        return polylist
+    element = my_path
+    #for element in os.listdir(my_path):
+    if element.endswith(".jpeg") and element[-6].isnumeric():
+        name_image = element.split("/")[-1]
+        boxes = bbox_image(name_image)
+        polylist = []
+        for box in boxes:
+            if boxes[box][0][0] < 0 or boxes[box][0][0] > 1023:
+                if boxes[box][0][0] < 0:
+                    boxes[box][0][0] = 0
+                else:
+                    boxes[box][0][0] = 1022
+            if boxes[box][0][1] < 0 or boxes[box][0][1] > 1023:
+                if boxes[box][0][1] < 0:
+                    boxes[box][0][1] = 0
+                else:
+                    boxes[box][0][1] = 1022
+            min_x, max_x = boxes[box][0][0], boxes[box][0][0]
+            min_y, max_y = boxes[box][0][1], boxes[box][0][1]
+
+            print("these:", max_y, min_y, min_x, max_x)
+            for vertices in boxes[box]:
+                if vertices[0] >= max_x and vertices[0] > 0 and vertices[0] < 1023:
+                    max_x = vertices[0]
+                elif vertices[0] < min_x and vertices[0] > 0 and vertices[0] < 1023:
+                    min_x = vertices[0]
+                if vertices[1] >= max_y and vertices[1] > 0 and vertices[1] < 1023:
+                    max_y = vertices[1]
+                elif vertices[1] < min_y and vertices[1] > 0 and vertices[0] < 1023:
+                    min_y = vertices[1]
+            print("these:", min_y, min_y + (max_y - min_y), "and", min_x, min_x + (max_x - min_x))
+            im = cv2.imread(my_path , cv2.IMREAD_COLOR)
+            rectangle = im[min_y: min_y + (max_y - min_y), min_x : min_x + (max_x - min_x)]
+
+            cv2.imwrite(name_image + "_" + box + ".jpeg", rectangle)
+            #box_poly = shapely.geometry.box(min_x, min_y, max_x, max_y)
+                #polylist.append(box_poly)
+        #return polylist
                 #rectangle = img_clone[min_y:min_y + (max_y - min_y), min_x:min_x + (max_x - min_x)]
                 #cv2.imwrite(name_image + "_" + box + ".jpeg", rectangle)
 
@@ -121,40 +134,19 @@ def intersection_list(polylist: set):
         for el in range(len(polylist)//2, len(polylist)):
             p = polylist[el]
             if r.intersects(p):
-                list_intersected.append((el, element))
+                iou = r.intersection(p).area/r.union(p).area
+                list_intersected.append([el, element, iou])
+
     return list_intersected
 
-def slice_one(gdf, index):
-    inter = gdf.loc[gdf.intersects(gdf.iloc[index].geometry)]
-    if len(inter) == 1: return inter.geometry.values[0]
-    box_A = inter.loc[index].values[0]
-    inter = inter.drop(index, axis=0)
-    polys = []
-    for i in range(len(inter)):
-        box_B = inter.iloc[i].values[0]
-        polyA, *_ = slice_box(box_A, box_B)
-        polys.append(polyA)
-    return intersection_list(polys)
-
-def slice_box(box_A:Polygon, box_B:Polygon, margin=10, line_mult=10):
-    vec_AB = np.array([box_B.centroid.x - box_A.centroid.x, box_B.centroid.y - box_A.centroid.y])
-    vec_ABp = np.array([-(box_B.centroid.y - box_A.centroid.y), box_B.centroid.x - box_A.centroid.x])
-    vec_AB_norm = np.linalg.norm(vec_AB)
-    split_point = box_A.centroid + vec_AB/2 - (vec_AB/vec_AB_norm)*margin
-    line = LineString([split_point-line_mult*vec_ABp, split_point+line_mult*vec_ABp])
-    split_box = split(box_A, line)
-    if len(split_box) == 1: return split_box, None, line
-    is_center = [s.contains(box_A.centroid) for s in split_box]
-    where_is_center = np.argwhere(is_center).reshape(-1)[0]
-    where_not_center = np.argwhere(~np.array(is_center)).reshape(-1)[0]
-    split_box_center = split_box[where_is_center]
-    split_box_out = split_box[where_not_center]
-    return split_box_center, split_box_out, line
 
 
 
 
-print(intersection_list(extract_objects("./dataset/examples")))
+
+
+
+extract_objects("./dataset/examples/scene0-20_view=0.jpeg")
 
 
 
