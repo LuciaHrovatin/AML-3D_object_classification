@@ -15,17 +15,15 @@ from shapely.geometry import LineString
 from shapely.ops import split
 from tqdm import tqdm
 
-#def unzip_file(url: str, target_path: str):
-    #response = requests.get(url, stream=True)
-    # handle = open(target_path, "wb")
-    # for chunk in response.iter_content(chunk_size=512):
-    #     if chunk:
-    #         handle.write(chunk)
-    # handle.close()
-# to unzip the dataset
-#with ZipFile("lego_dataset.zip", 'r') as zipObj:
+def unzip_file(zipfolder: str):
+    """
+    Extracts all the files stored in the zip file saving
+    them in the current directory in the "dataset" folder.
+    @param filename: name of the zipped folder from which the files are extracted
+    """
+    with ZipFile(zipfolder, 'r') as zipObj:
     # Extract all the contents of zip file in current directory
-#    zipObj.extractall(path='dataset')
+        zipObj.extractall(path='dataset')
 
 
 def extract_json(my_path):
@@ -46,7 +44,7 @@ def extract_json(my_path):
         f.write(stringJSON)
 
 
-def store_info(element: str):
+def store_info(element: str) -> dict:
     """
     It parses the json file passed as parameter, returning a dictionary
     with y (lego names) as keys and bbox as values.
@@ -65,7 +63,10 @@ def store_info(element: str):
             scene[identifier] = bbox
     return scene
 
-def save_objects():
+def save_objects() -> set:
+    """
+    Saves the number of distinct classes (i.e., lego pieces) and returns them
+    """
     with open("./final_db.json",) as f:
         data = json.load(f)
         legos = set()
