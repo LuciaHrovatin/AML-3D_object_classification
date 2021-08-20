@@ -107,7 +107,7 @@ def extract_objects(my_path: str):
                 min_x, max_x = boxes[box][0][0], boxes[box][0][0]
                 min_y, max_y = boxes[box][0][1], boxes[box][0][1]
 
-                print("these:", max_y, min_y, min_x, max_x)
+                #print("these:", max_y, min_y, min_x, max_x)
                 for vertices in boxes[box]:
                     if vertices[0] >= max_x and vertices[0] > 0 and vertices[0] < 1023:
                         max_x = vertices[0]
@@ -118,7 +118,7 @@ def extract_objects(my_path: str):
                     elif vertices[1] < min_y and vertices[1] > 0 and vertices[0] < 1023:
                         min_y = vertices[1]
                 if min_y != max_y and min_x != max_x:
-                    print("these:", min_y, min_y + (max_y - min_y), "and", min_x, min_x + (max_x - min_x))
+                    # print("these:", min_y, min_y + (max_y - min_y), "and", min_x, min_x + (max_x - min_x))
                     im = cv2.imread(my_path , cv2.IMREAD_COLOR)
                     rectangle = im[min_y: min_y + (max_y - min_y), min_x : min_x + (max_x - min_x)]
                     cv2.imwrite(name_image + "_" + box + ".jpeg", rectangle)
@@ -153,7 +153,7 @@ def intersection_list(polylist: set):
 
 
 
-extract_objects("./dataset/examples/scene0-20_view=1.jpeg")
+extract_objects("./dataset/examples/scene0-20_view=0.jpeg")
 
 
 # in a z-map every pixel in a scene is assigned a 0-255 grayscale value based upon its distance from the camera.
