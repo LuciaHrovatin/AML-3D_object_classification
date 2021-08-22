@@ -2,27 +2,21 @@ import json
 from typing import List
 import pandas as pd
 import matplotlib.pyplot as plt
-import requests
 import os
 from zipfile import ZipFile
 import numpy as np
 import cv2
-import shapely
-from shapely.geometry import box
-from shapely.geometry import Polygon
-from shapely.geometry import LineString
-from shapely.ops import split
-# import open3d as o3d
+#import open3d as o3d
 
 
 class DataIngestion:
 
-    def __init__(self, final_dataset: str):
+    def __init__(self):
         """
         The class DataIngestion is initialised specifying the name
         of the json file where the transformed dataset will be stored.
         """
-        self.data_storer = final_dataset
+        self.data_storer = "final_db.json"
         self.path = "dataset"
 
     def unzip_file(self, zip_folder: str):
@@ -94,49 +88,49 @@ class DataIngestion:
                 return print("Scene " + image + " is not present in the dataset.")
 
     def extract_objects(self, my_path: str):
-        element = my_path
-        # for element in os.listdir(my_path):
-        actual = 0
-        total = 0
-        if element.endswith(".jpeg") and element[-6].isnumeric():
-            name_image = element.split("/")[-1]
-            boxes = self.bbox_image(name_image)
-            for box in boxes:
-                if len(set(tuple(x) for x in boxes[box])) == len(boxes[box]):
-                    if boxes[box][0][0] < 0 or boxes[box][0][0] > 1023:
-                        if boxes[box][0][0] < 0:
-                            boxes[box][0][0] = 0
-                        else:
-                            boxes[box][0][0] = 1023
-                    if boxes[box][0][1] < 0 or boxes[box][0][1] > 1023:
-                        if boxes[box][0][1] < 0:
-                            boxes[box][0][1] = 0
-                        else:
-                            boxes[box][0][1] = 1023
-                    min_x, max_x = boxes[box][0][0], boxes[box][0][0]
-                    min_y, max_y = boxes[box][0][1], boxes[box][0][1]
+        tot_images = os.listdir(my_path)
+        for element in tot_images:
+            if element.endswith(".jpeg") and element[-6].isnumeric():
+                name_image = element.split("/")[-1]
+                boxes = self.bbox_image(name_image)
+                for box in boxes:
+                    if len(set(tuple(x) for x in boxes[box])) == len(boxes[box]):
+                        if boxes[box][0][0] < 0 or boxes[box][0][0] > 1023:
+                            if boxes[box][0][0] < 0:
+                                boxes[box][0][0] = 0
+                            else:
+                                boxes[box][0][0] = 1023
+                        if boxes[box][0][1] < 0 or boxes[box][0][1] > 1023:
+                            if boxes[box][0][1] < 0:
+                                boxes[box][0][1] = 0
+                            else:
+                                boxes[box][0][1] = 1023
+                        min_x, max_x = boxes[box][0][0], boxes[box][0][0]
+                        min_y, max_y = boxes[box][0][1], boxes[box][0][1]
 
-                    for vertices in boxes[box]:
-                        if 0 < vertices[0] < 1023:
-                            if vertices[0] > max_x:
-                                max_x = vertices[0]
-                            elif vertices[0] < min_x:
-                                min_x = vertices[0]
-                        if 0 < vertices[1] < 1023:
-                            if vertices[1] > max_y:
-                                max_y = vertices[1]
-                            elif vertices[1] < min_y:
-                                min_y = vertices[1]
-                    if min_y != max_y and min_x != max_x:
-                        # print("these:", min_y, min_y + (max_y - min_y), "and", min_x, min_x + (max_x - min_x))
-                        im = cv2.imread(my_path, cv2.IMREAD_COLOR)
-                        rectangle = im[min_y: min_y + (max_y - min_y), min_x: min_x + (max_x - min_x)]
-                        cv2.imwrite(name_image + "_" + box + ".jpeg", rectangle)
+                        for vertices in boxes[box]:
+                            if 0 < vertices[0] < 1023:
+                                if vertices[0] > max_x:
+                                    max_x = vertices[0]
+                                elif vertices[0] < min_x:
+                                    min_x = vertices[0]
+                            if 0 < vertices[1] < 1023:
+                                if vertices[1] > max_y:
+                                    max_y = vertices[1]
+                                elif vertices[1] < min_y:
+                                    min_y = vertices[1]
+                        if min_y != max_y and min_x != max_x and (max_y - min_y) > 1 and (max_x - min_x) > 1:
+                            im = cv2.imread(my_path + element, cv2.IMREAD_COLOR)
+                            rectangle = im[min_y: min_y + (max_y - min_y), min_x: min_x + (max_x - min_x)]
+                            savedPath = os.getcwd()
+                            dir = "images_final"
+                            if not os.path.exists(dir):
+                                os.mkdir(dir)
+                            os.chdir("images_final")
+                            cv2.imwrite(name_image + "_" + box + ".jpeg", rectangle)
+                            os.chdir(savedPath)
 
-                # in order to see the percentage of usable legos (i.e., with correct coordinates)
-                actual += len(set(tuple(x) for x in boxes[box]))
-                total += len(boxes[box])
-                return actual/total * 100
+
 
             # box_poly = shapely.geometry.box(min_x, min_y, max_x, max_y)
             # polylist.append(box_poly)
@@ -159,7 +153,8 @@ def intersection_list(polylist: set):
     return list_intersected
 """
 
-# extract_objects("./dataset/examples/scene0-20_view=0.jpeg")
+example = DataIngestion()
+print(example.extract_objects("./dataset/examples/"))
 
 
 # in a z-map every pixel in a scene is assigned a 0-255 grayscale value based upon its distance from the camera.
