@@ -89,11 +89,15 @@ class DataIngestion:
 
     def extract_objects(self, my_path: str):
         tot_images = os.listdir(my_path)
+        #total = 0
+        #actual = 0
         for element in tot_images:
             if element.endswith(".jpeg") and element[-6].isnumeric():
                 name_image = element.split("/")[-1]
                 boxes = self.bbox_image(name_image)
                 for box in boxes:
+                    #actual += len(set(tuple(x) for x in boxes[box]))
+                    #total += len(boxes[box])
                     if len(set(tuple(x) for x in boxes[box])) == len(boxes[box]):
                         if boxes[box][0][0] < 0 or boxes[box][0][0] > 1023:
                             if boxes[box][0][0] < 0:
@@ -119,24 +123,22 @@ class DataIngestion:
                                     max_y = vertices[1]
                                 elif vertices[1] < min_y:
                                     min_y = vertices[1]
-                        if min_y != max_y and min_x != max_x and (max_y - min_y) > 1 and (max_x - min_x) > 1:
+                        if min_y != max_y and min_x != max_x and (max_y - min_y) > 2 and (max_x - min_x) > 2:
                             im = cv2.imread(my_path + element, cv2.IMREAD_COLOR)
+                            im_depth = cv2.imread(my_path + name_image + "depth.jpeg", cv2.IMREAD_GRAYSCALE)
                             rectangle = im[min_y: min_y + (max_y - min_y), min_x: min_x + (max_x - min_x)]
+                            rectangle_depth = im_depth[min_y: min_y + (max_y - min_y), min_x: min_x + (max_x - min_x)]
                             savedPath = os.getcwd()
                             dir = "images_final"
                             if not os.path.exists(dir):
                                 os.mkdir(dir)
-                            os.chdir("images_final")
+                            os.chdir(dir)
                             cv2.imwrite(name_image + "_" + box + ".jpeg", rectangle)
+                            cv2.imwrite(name_image + "_" + box + "_depth.jpeg", rectangle_depth)
                             os.chdir(savedPath)
+        #return( actual/total) * 100
 
 
-
-            # box_poly = shapely.geometry.box(min_x, min_y, max_x, max_y)
-            # polylist.append(box_poly)
-        # return polylist
-        # rectangle = img_clone[min_y:min_y + (max_y - min_y), min_x:min_x + (max_x - min_x)]
-        # cv2.imwrite(name_image + "_" + box + ".jpeg", rectangle)
 
 
 """
@@ -168,9 +170,8 @@ print(example.extract_objects("./dataset/examples/"))
 def point_cloud(image_col, image_depth):
     color_raw = o3d.io.read_image(image_col)
     depth_raw = o3d.io.read_image(image_depth)
-    rgbd_image = o3d.geometry.RGBDImage.create_from_color_and_depth(
-        color_raw, depth_raw)
-    print(rgbd_image)
+    rgbd_image = o3d.geometry.RGBDImage.create_from_color_and_depth(color_raw, depth_raw)
+    #print(rgbd_image)
     pcd = o3d.geometry.PointCloud.create_from_rgbd_image(
         rgbd_image,
         o3d.camera.PinholeCameraIntrinsic(
