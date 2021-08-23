@@ -1,7 +1,5 @@
 import json
-from typing import List
 import pandas as pd
-import matplotlib.pyplot as plt
 import os
 from zipfile import ZipFile
 import numpy as np
@@ -123,7 +121,7 @@ class DataIngestion:
                                     max_y = vertices[1]
                                 elif vertices[1] < min_y:
                                     min_y = vertices[1]
-                        if min_y != max_y and min_x != max_x and (max_y - min_y) > 2 and (max_x - min_x) > 2:
+                        if min_y != max_y and min_x != max_x: # and (max_y - min_y) > 2 and (max_x - min_x) > 2:
                             im = cv2.imread(my_path + element, cv2.IMREAD_COLOR)
                             im_depth = cv2.imread(my_path + name_image + "depth.jpeg", cv2.IMREAD_GRAYSCALE)
                             rectangle = im[min_y: min_y + (max_y - min_y), min_x: min_x + (max_x - min_x)]
@@ -137,23 +135,6 @@ class DataIngestion:
                             cv2.imwrite(name_image + "_" + box + "_depth.jpeg", rectangle_depth)
                             os.chdir(savedPath)
         #return( actual/total) * 100
-
-
-
-
-"""
-def intersection_list(polylist: set):
-    list_intersected = []
-    for element in range(len(polylist) // 2):
-        r = polylist[element]
-        for el in range(len(polylist) // 2, len(polylist)):
-            p = polylist[el]
-            if r.intersects(p):
-                iou = r.intersection(p).area / r.union(p).area
-                list_intersected.append([el, element, iou])
-
-    return list_intersected
-"""
 
 example = DataIngestion()
 print(example.extract_objects("./dataset/examples/"))
@@ -179,4 +160,20 @@ def point_cloud(image_col, image_depth):
     # Flip it, otherwise the pointcloud will be upside down
     pcd.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
     o3d.visualization.draw_geometries([pcd], zoom=0.5)
+"""
+
+
+"""
+# NON NECESSARIA!!
+def intersection_list(polylist: set):
+    list_intersected = []
+    for element in range(len(polylist) // 2):
+        r = polylist[element]
+        for el in range(len(polylist) // 2, len(polylist)):
+            p = polylist[el]
+            if r.intersects(p):
+                iou = r.intersection(p).area / r.union(p).area
+                list_intersected.append([el, element, iou])
+
+    return list_intersected
 """
