@@ -3,6 +3,7 @@ import os
 from zipfile import ZipFile
 import numpy as np
 import cv2
+from PIL import Image
 #import open3d as o3d
 
 
@@ -65,6 +66,7 @@ class DataIngestion:
 
     def get_objects(self) -> set:
         """
+        MODIFICA per restituire un int (N classi)
         Saves the number of distinct classes (i.e., lego pieces) and returns them
         """
         with open(self.data_storer, ) as f:
@@ -127,7 +129,7 @@ class DataIngestion:
                                     max_y = vertices[1]
                                 elif vertices[1] < min_y:
                                     min_y = vertices[1]
-                        if min_y != max_y and min_x != max_x: # and (max_y - min_y) > 2 and (max_x - min_x) > 2:
+                        if min_y != max_y and min_x != max_x:
                             im = cv2.imread(my_path + element, cv2.IMREAD_COLOR)
                             im_depth = cv2.imread(my_path + name_image + "depth.jpeg", cv2.IMREAD_GRAYSCALE)
                             rectangle = im[min_y: min_y + (max_y - min_y), min_x: min_x + (max_x - min_x)]
@@ -141,7 +143,7 @@ class DataIngestion:
                             #cv2.imwrite(name_image + "_" + box + "_depth.jpeg", rectangle_depth)
                             cv2.imwrite(name_image  + "_" + box + ".jpeg", point_cloud(rectangle, rectangle_depth))
                             os.chdir(savedPath)
-        #return( actual/total) * 100
+        #return (actual/total) * 100
 
     # in a z-map every pixel in a scene is assigned a 0-255 grayscale value based upon its distance from the camera.
     # Traditionally the objects
@@ -171,6 +173,19 @@ class DataIngestion:
         # Flip it, otherwise the pointcloud will be upside down
         #pcd.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
         #o3d.visualization.draw_geometries([pcd], zoom=0.5)
+
+
+    @staticmethod
+    def transform_binary(point_cloud: str):
+        # Read Image
+        img = Image.open(point_cloud)
+        # Convert Image to Numpy as array
+        img = np.array(img)
+        # Put threshold to make it binary
+        binarr = np.where(img > 128, 255, 0)
+        # Covert numpy array back to image
+        binimg = Image.fromarray(binarr)
+
 
 example = DataIngestion()
 print(example.extract_objects("./dataset/examples/"))
