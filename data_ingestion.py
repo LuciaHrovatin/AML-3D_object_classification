@@ -1,5 +1,4 @@
 import json
-import pandas as pd
 import os
 from zipfile import ZipFile
 import numpy as np
@@ -144,39 +143,37 @@ class DataIngestion:
                             os.chdir(savedPath)
         #return( actual/total) * 100
 
+    # in a z-map every pixel in a scene is assigned a 0-255 grayscale value based upon its distance from the camera.
+    # Traditionally the objects
+    # - closest to the camera are white
+    # - the objects furthest from the camera are black
+    # A depth map only contains the distance or Z information for each pixel
+    # which in a monochrome (grayscale) 8-bit representation is necessary with values between [0, 255],
+    # where 255 represents the closest possible depth value and 0 the most distant possible depth value.
+
+    @staticmethod
+    def point_cloud(image_col, image_depth):
+        """
+        Giving two frames, a colored and a grey one, of the same lego piece,
+        the function returns the corresponding Point Cloud.
+        @param image_col: colored frame
+        #param image_depth: image reporting depth information
+        """
+        color_raw = o3d.io.read_image(image_col)
+        depth_raw = o3d.io.read_image(image_depth)
+        rgbd_image = o3d.geometry.RGBDImage.create_from_color_and_depth(color_raw, depth_raw)
+        #print(rgbd_image)
+        pcd = o3d.geometry.PointCloud.create_from_rgbd_image(
+            rgbd_image,
+            o3d.camera.PinholeCameraIntrinsic(
+                o3d.camera.PinholeCameraIntrinsicParameters.PrimeSenseDefault))
+        return pcd
+        # Flip it, otherwise the pointcloud will be upside down
+        #pcd.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
+        #o3d.visualization.draw_geometries([pcd], zoom=0.5)
+
 example = DataIngestion()
 print(example.extract_objects("./dataset/examples/"))
-
-
-# in a z-map every pixel in a scene is assigned a 0-255 grayscale value based upon its distance from the camera.
-# Traditionally the objects
-# - closest to the camera are white
-# - the objects furthest from the camera are black
-# A depth map only contains the distance or Z information for each pixel
-# which in a monochrome (grayscale) 8-bit representation is necessary with values between [0, 255],
-# where 255 represents the closest possible depth value and 0 the most distant possible depth value.
-
-def point_cloud(image_col, image_depth):
-    """
-    Giving two frames, a colored and a grey one, of the same lego piece,
-    the function returns the corresponding Point Cloud.
-    @param image_col: colored frame
-    #param image_depth: image reporting depth information
-    """
-    color_raw = o3d.io.read_image(image_col)
-    depth_raw = o3d.io.read_image(image_depth)
-    rgbd_image = o3d.geometry.RGBDImage.create_from_color_and_depth(color_raw, depth_raw)
-    #print(rgbd_image)
-    pcd = o3d.geometry.PointCloud.create_from_rgbd_image(
-        rgbd_image,
-        o3d.camera.PinholeCameraIntrinsic(
-            o3d.camera.PinholeCameraIntrinsicParameters.PrimeSenseDefault))
-    return pcd
-    # Flip it, otherwise the pointcloud will be upside down
-    #pcd.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
-    #o3d.visualization.draw_geometries([pcd], zoom=0.5)
-
-
 
 """
 # NON NECESSARIA!!
