@@ -64,10 +64,11 @@ class DataIngestion:
                 scene[identifier] = bbox
         return scene
 
-    def get_objects(self) -> set:
+    def get_objects(self) -> int:
         """
-        MODIFICA per restituire un int (N classi)
-        Saves the number of distinct classes (i.e., lego pieces) and returns them
+        Saves distinct classes (i.e., lego pieces) and
+        returns the final number of classes.
+        @return integer number of classes
         """
         with open(self.data_storer, ) as f:
             data = json.load(f)
@@ -75,7 +76,7 @@ class DataIngestion:
             for scene in data:
                 for key in data[scene]:
                     legos.add(key)
-            return legos
+            return len(legos)
 
     def bbox_image(self, image_name: str):
         """
@@ -190,17 +191,3 @@ class DataIngestion:
 example = DataIngestion()
 print(example.extract_objects("./dataset/examples/"))
 
-"""
-# NON NECESSARIA!!
-def intersection_list(polylist: set):
-    list_intersected = []
-    for element in range(len(polylist) // 2):
-        r = polylist[element]
-        for el in range(len(polylist) // 2, len(polylist)):
-            p = polylist[el]
-            if r.intersects(p):
-                iou = r.intersection(p).area / r.union(p).area
-                list_intersected.append([el, element, iou])
-
-    return list_intersected
-"""

@@ -62,5 +62,5 @@ train_index, valid_index = train_test_split(range(len(dataset)), test_size=0.3)
 batch_size = 100
 train_dataset = Subset(dataset, train_index)
 train_dataloader = DataLoader(train_dataset, batch_size, shuffle=True)
-valid_dataset   = Subset(dataset, valid_index)
+valid_dataset = Subset(dataset, valid_index)
 valid_dataloader = DataLoader(valid_dataset, batch_size, shuffle=False)
