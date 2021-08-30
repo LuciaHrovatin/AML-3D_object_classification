@@ -188,6 +188,4 @@ class DataIngestion:
         binimg = Image.fromarray(binarr)
 
 
-example = DataIngestion()
-print(example.extract_objects("./dataset/examples/"))
 
