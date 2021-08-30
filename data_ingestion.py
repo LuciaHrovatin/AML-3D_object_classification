@@ -132,18 +132,19 @@ class DataIngestion:
                                     min_y = vertices[1]
                         if min_y != max_y and min_x != max_x:
                             im = cv2.imread(my_path + element, cv2.IMREAD_COLOR)
-                            im_depth = cv2.imread(my_path + name_image + "depth.jpeg", cv2.IMREAD_GRAYSCALE)
-                            rectangle = im[min_y: min_y + (max_y - min_y), min_x: min_x + (max_x - min_x)]
-                            rectangle_depth = im_depth[min_y: min_y + (max_y - min_y), min_x: min_x + (max_x - min_x)]
-                            savedPath = os.getcwd()
-                            dir = "images_final"
-                            if not os.path.exists(dir):
-                                os.mkdir(dir)
-                            os.chdir(dir)
-                            #cv2.imwrite(name_image + "_" + box + ".jpeg", rectangle)
-                            #cv2.imwrite(name_image + "_" + box + "_depth.jpeg", rectangle_depth)
-                            cv2.imwrite(name_image  + "_" + box + ".jpeg", point_cloud(rectangle, rectangle_depth))
-                            os.chdir(savedPath)
+                            im_depth = cv2.imread(my_path + name_image.rstrip(".jpeg") + "_depth.jpeg", cv2.IMREAD_GRAYSCALE)
+                            if im_depth is not None and im is not None:
+                                rectangle = im[min_y: min_y + (max_y - min_y), min_x: min_x + (max_x - min_x)]
+                                rectangle_depth = im_depth[min_y: min_y + (max_y - min_y), min_x: min_x + (max_x - min_x)]
+                                savedPath = os.getcwd()
+                                dir = "images_final"
+                                if not os.path.exists(dir):
+                                    os.mkdir(dir)
+                                os.chdir(dir)
+                                cv2.imwrite(name_image + "_" + box + ".jpeg", rectangle)
+                                cv2.imwrite(name_image.rstrip(".jpeg") + "_" + box + "_depth.jpeg", rectangle_depth)
+                                #cv2.imwrite(name_image  + "_" + box + ".jpeg", point_cloud(rectangle, rectangle_depth))
+                                os.chdir(savedPath)
         #return (actual/total) * 100
 
     # in a z-map every pixel in a scene is assigned a 0-255 grayscale value based upon its distance from the camera.
@@ -153,15 +154,13 @@ class DataIngestion:
     # A depth map only contains the distance or Z information for each pixel
     # which in a monochrome (grayscale) 8-bit representation is necessary with values between [0, 255],
     # where 255 represents the closest possible depth value and 0 the most distant possible depth value.
-
+"""
     @staticmethod
     def point_cloud(image_col, image_depth):
-        """
-        Giving two frames, a colored and a grey one, of the same lego piece,
-        the function returns the corresponding Point Cloud.
-        @param image_col: colored frame
-        #param image_depth: image reporting depth information
-        """
+        #Giving two frames, a colored and a grey one, of the same lego piece,
+        #the function returns the corresponding Point Cloud.
+        #@param image_col: colored frame
+        ##param image_depth: image reporting depth information
         color_raw = o3d.io.read_image(image_col)
         depth_raw = o3d.io.read_image(image_depth)
         rgbd_image = o3d.geometry.RGBDImage.create_from_color_and_depth(color_raw, depth_raw)
@@ -174,8 +173,8 @@ class DataIngestion:
         # Flip it, otherwise the pointcloud will be upside down
         #pcd.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
         #o3d.visualization.draw_geometries([pcd], zoom=0.5)
-
-
+"""
+"""
     @staticmethod
     def transform_binary(point_cloud: str):
         # Read Image
@@ -186,6 +185,4 @@ class DataIngestion:
         binarr = np.where(img > 128, 255, 0)
         # Covert numpy array back to image
         binimg = Image.fromarray(binarr)
-
-
-
+"""
