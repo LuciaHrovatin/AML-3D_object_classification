@@ -22,7 +22,7 @@ TL;DR: for the input point cloud x we predict and apply its rotation matrix
 """
 
 
-class TNet(nn.Module):
+class TNet3(nn.Module):
 
     def _init__(self):
         """
@@ -72,6 +72,44 @@ class TNet(nn.Module):
 
         return x
 
+class TNet64(nn.Module):
+    def __init__(self, k=64):
+        super(TNet64, self).__init__()
+        self.conv1 = torch.nn.Conv1d(k, 64, 1)
+        self.conv2 = torch.nn.Conv1d(64, 128, 1)
+        self.conv3 = torch.nn.Conv1d(128, 1024, 1)
+        self.fc1 = nn.Linear(1024, 512)
+        self.fc2 = nn.Linear(512, 256)
+        self.fc3 = nn.Linear(256, k*k)
+        self.relu = nn.ReLU()
+
+        self.bn1 = nn.BatchNorm1d(64)
+        self.bn2 = nn.BatchNorm1d(128)
+        self.bn3 = nn.BatchNorm1d(1024)
+        self.bn4 = nn.BatchNorm1d(512)
+        self.bn5 = nn.BatchNorm1d(256)
+
+        self.k = k
+
+    def forward(self, x):
+        batchsize = x.size()[0]
+        x = F.relu(self.bn1(self.conv1(x)))
+        x = F.relu(self.bn2(self.conv2(x)))
+        x = F.relu(self.bn3(self.conv3(x)))
+        x = torch.max(x, 2, keepdim=True)[0]
+        x = x.view(-1, 1024)
+
+        x = F.relu(self.bn4(self.fc1(x)))
+        x = F.relu(self.bn5(self.fc2(x)))
+        x = self.fc3(x)
+
+        iden = Variable(torch.from_numpy(np.eye(self.k).flatten().astype(np.float32))).view(1,self.k*self.k).repeat(batchsize,1)
+        if x.is_cuda:
+            iden = iden.cuda()
+        x = x + iden
+        x = x.view(-1, self.k, self.k)
+        return x
+
 
 '''
 Now we are ready to define PointNet. Our input will have shape [batch_size, n_point, 3].
@@ -90,16 +128,16 @@ The structure of the network should be the following:
 '''
 
 
-class PointNet(nn.Module):
+class PointNetFeature(nn.Module):
 
-    def __init__(self, num_classes: int):
+    def __init__(self, num_classes: int, global_feat: True, feature_transform: False):
         super().__init__()
-        self.tnet = TNet()
+        self.tnet = TNet3()
+        
+        self.conv1 = torch.nn.Conv1d(3, 64, 1)
+        self.bn1 = nn.BatchNorm1d(64)
+        
         self.main = nn.Sequential(
-            torch.nn.Conv1d(3, 64, 1),
-            nn.BatchNorm1d(64),
-            nn.ReLU(inplace=True),
-
             torch.nn.Conv1d(64, 128, 1),
             nn.BatchNorm1d(128),
             nn.ReLU(inplace=True),
@@ -107,22 +145,99 @@ class PointNet(nn.Module):
             torch.nn.Conv1d(128, 1024, 1),
             nn.BatchNorm1d(1024)
         )
+        
+        self.global_feat = global_feat
+        self.feature_transform = feature_transform
+        if self.feature_transform:
+            self.ftnet = TNet64(k=64)
 
-        self.linear = nn.Linear(1024, num_classes)
-        self.softmax = nn.SoftMax(1)
 
     def forward(self, x):
-        # [batch, n_points, 3]
+
+        number_points = x.size()[2]
         trans = self.tnet(x)
+        x = x.transpose(2, 1)
         x = torch.bmm(x, trans)
+        x = x.transpose(2, 1)
+        x = F.relu(self.bn1(self.conv1(x)))
 
-        x = x.transpose(1, 2)
-        # [batch_size, 3, n_points]
+        if self.feature_transform:
+            trans_feat = self.ftnet(x)
+            x = x.transpose(2,1)
+            x = torch.bmm(x, trans_feat)
+            x = x.transpose(2,1)
+        else:
+            trans_feat = None
+
+        pointfeatures = x
         x = self.main(x)
-        # shape [batch_size, 1024, n_points]
-        x, _ = torch.max(x, 2)
 
-        x = self.linear(x)
-        x = self.softmax(x)
+        x = torch.max(x, 2, keepdim=True)[0]
+        x = x.view(-1, 1024)
+        if self.global_feat:
+            return x, trans, trans_feat
+        else:
+            x = x.view(-1, 1024, 1).repeat(1, 1, number_points)
+            return torch.cat([x, pointfeatures], 1), trans, trans_feat
 
-        return x
+class PointNetClassification(nn.Module):
+    def __init__(self, k=2, feature_transform=False):
+        super(PointNetClassification, self).__init__()
+        self.feature_transform = feature_transform
+        self.feat = PointNetfeat(global_feat=True, feature_transform=feature_transform)
+        
+        self.main = nn.Sequential(
+            
+            nn.Linear(1024, 512),
+            nn.BatchNorm1d(512),
+            nn.ReLU(inplace = True),
+            
+            nn.Linear(512, 256),
+            nn.Dropout(p=0.2),
+            nn.BatchNorm1d(256),
+            nn.ReLU(inplace = True),
+            
+            nn.Linear(256, k)
+            
+        )
+        
+
+    def forward(self, x):
+        x, trans, trans_feat = self.feat(x)
+        x = self.main(x)
+        return F.log_softmax(x, dim=1), trans, trans_feat
+    
+    
+def loss_function(trans):
+    d = trans.size()[1]
+    batchsize = trans.size()[0]
+    I = torch.eye(d)[None, :, :]
+    if trans.is_cuda:
+        I = I.cuda()
+    loss = torch.mean(torch.norm(torch.bmm(trans, trans.transpose(2,1)) - I, dim=(1,2)))
+    return loss
+
+if __name__ == '__main__':
+    sim_data = Variable(torch.rand(32,3,2500))
+    trans = TNet3()
+    out = trans(sim_data)
+    print('stn', out.size())
+    print('loss', loss_function(out))
+
+    sim_data_64d = Variable(torch.rand(32, 64, 2500))
+    trans = TNet64(k=64)
+    out = trans(sim_data_64d)
+    print('stn64d', out.size())
+    print('loss', loss_function(out))
+
+    pointfeat = PointNetfeat(global_feat=True)
+    out, _, _ = pointfeat(sim_data)
+    print('global feat', out.size())
+
+    pointfeat = PointNetfeat(global_feat=False)
+    out, _, _ = pointfeat(sim_data)
+    print('point feat', out.size())
+
+    classifier = PointNetClassification(k = 5)
+    out, _, _ = classifier(sim_data)
+    print('class', out.size())
