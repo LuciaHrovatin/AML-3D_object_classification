@@ -7,7 +7,9 @@
 ## Prerequisites 
 
 In order to run this project, the following tools have to be installed on your machine: 
-- Python, preferably [3.9](https://www.python.org/downloads/release/python-390/) 
+- Python, preferably [3.8](https://www.python.org/downloads/release/python-380/) 
+
+**Note:** Python version [3.9](https://www.python.org/downloads/release/python-390/) is not supported by some modules (*open3d*).   
 
 ## Installation 
 
