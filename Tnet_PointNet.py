@@ -70,6 +70,8 @@ class TNet(nn.Module):
         x += iden
         x = x.view(-1, 3, 3)
 
+        return x
+
 
 '''
 Now we are ready to define PointNet. Our input will have shape [batch_size, n_point, 3].

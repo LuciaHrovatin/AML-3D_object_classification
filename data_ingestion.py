@@ -174,6 +174,8 @@ class DataIngestion:
         pcd.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
         o3d.visualization.draw_geometries([pcd])
 
+
+# np.array per punto
     """
     @staticmethod
     def transform_binary(point_cloud: str):
