@@ -19,13 +19,14 @@ class Split:
         self.batch_size = batch_size
 
     def train_test(self):
-        dataset = self.get_dataset(self.data_storer)
+        dataset = self.get_dataset(self.data_storer) # da modificareeee!!!! <- CSV
+
         train_index, test_index = train_test_split(range(len(dataset)), test_size=0.3)
 
         train_set = Subset(dataset, train_index)
-        self.train_loader = DataLoader(train_dataset, self.batch_size, shuffle=True)
+        self.train_loader = DataLoader(train_set, self.batch_size, shuffle=True)
         test_set = Subset(dataset, test_index)
-        self.test_loader = DataLoader(test_dataset, self.batch_size, shuffle=False)
+        self.test_loader = DataLoader(test_set, self.batch_size, shuffle=False)
         
     # evaluation
     def eval_net(self, net, test_loader,epoch_i):
@@ -35,17 +36,17 @@ class Split:
       n_pc = 0
 
       for batch_it, (x_tr,y_tr) in enumerate(self.test_loader):
-        x_input = torch.FloatTensor(x_tr).cuda()
-        y_input = torch.LongTensor(y_tr).cuda()
+        x_input = torch.FloatTensor(x_tr) # matrice della pointcloud
+        y_input = torch.LongTensor(y_tr)
 
         probs = net(x_input)
 
-        acc += (probs.data.cpu().argmax(dim = 1) == y_tr).sum()
+        acc += (probs.data.cpu().argmax(dim = 1) == y_tr).sum() # accuracy con somma di casi in cui la NN indovina
         n_pc += y_tr.shape[0]
 
         acc = float(acc.data.cpu().numpy()) / n_pc
 
-      print("test accuracy: %.2f" % acc)
+      print("test accuracy: {}.2f".format(acc))
 
 
     #training

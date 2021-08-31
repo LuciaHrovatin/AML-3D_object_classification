@@ -155,7 +155,7 @@ class DataIngestion:
     # where 255 represents the closest possible depth value and 0 the most distant possible depth value.
 
 
-    def point_cloud(self, image_col, image_depth):
+def point_cloud(image_col, image_depth):
         """
         Giving two frames, a colored and a grey one, of the same lego piece,
         the function returns the corresponding Point Cloud.
@@ -173,18 +173,20 @@ class DataIngestion:
         # Flip the pointcloud will be upside down
         pcd.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
         o3d.visualization.draw_geometries([pcd])
+        lego_name = image_col.split("/")[-1].split("_")[-1].strip(".jpeg")
+        return lego_name, np.asarray(pcd.points)
+
+def transform_csv(my_path: str):
+    tot_images = os.listdir(my_path)
+    with open("final_images.csv", "w", newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=["lego_name", "point_cloud"])
+        writer.writeheader()
+
+        for el in range(len(tot_images), 2):
+            data = point_cloud(my_path + tot_images[el], my_path + tot_images[el+1])
+            writer.writerow({'lego_name': data[0], 'point_cloud"': data[1]})
 
 
-# np.array per punto
-    """
-    @staticmethod
-    def transform_binary(point_cloud: str):
-        # Read Image
-        img = Image.open(point_cloud)
-        # Convert Image to Numpy as array
-        img = np.array(img)
-        # Put threshold to make it binary
-        binarr = np.where(img > 128, 255, 0)
-        # Covert numpy array back to image
-        binimg = Image.fromarray(binarr)
-    """
+
+
+
