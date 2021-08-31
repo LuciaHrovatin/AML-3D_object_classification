@@ -3,8 +3,8 @@ import os
 from zipfile import ZipFile
 import numpy as np
 import cv2
-from PIL import Image
-#import open3d as o3d
+#from PIL import Image
+import open3d as o3d
 
 
 class DataIngestion:
@@ -96,15 +96,15 @@ class DataIngestion:
 
     def extract_objects(self, my_path: str):
         tot_images = os.listdir(my_path)
-        #total = 0
-        #actual = 0
+        total = 0
+        actual = 0
         for element in tot_images:
             if element.endswith(".jpeg") and element[-6].isnumeric():
                 name_image = element.split("/")[-1]
                 boxes = self.bbox_image(name_image)
                 for box in boxes:
-                    #actual += len(set(tuple(x) for x in boxes[box]))
-                    #total += len(boxes[box])
+                    actual += len(set(tuple(x) for x in boxes[box]))
+                    total += len(boxes[box])
                     if len(set(tuple(x) for x in boxes[box])) == len(boxes[box]):
                         if boxes[box][0][0] < 0 or boxes[box][0][0] > 1023:
                             if boxes[box][0][0] < 0:
@@ -141,11 +141,10 @@ class DataIngestion:
                                 if not os.path.exists(dir):
                                     os.mkdir(dir)
                                 os.chdir(dir)
-                                cv2.imwrite(name_image + "_" + box + ".jpeg", rectangle)
+                                cv2.imwrite(name_image.rstrip(".jpeg") + "_" + box + ".jpeg", rectangle)
                                 cv2.imwrite(name_image.rstrip(".jpeg") + "_" + box + "_depth.jpeg", rectangle_depth)
-                                #cv2.imwrite(name_image  + "_" + box + ".jpeg", point_cloud(rectangle, rectangle_depth))
                                 os.chdir(savedPath)
-        #return (actual/total) * 100
+        return print((actual/total) * 100)
 
     # in a z-map every pixel in a scene is assigned a 0-255 grayscale value based upon its distance from the camera.
     # Traditionally the objects
@@ -154,27 +153,28 @@ class DataIngestion:
     # A depth map only contains the distance or Z information for each pixel
     # which in a monochrome (grayscale) 8-bit representation is necessary with values between [0, 255],
     # where 255 represents the closest possible depth value and 0 the most distant possible depth value.
-"""
-    @staticmethod
-    def point_cloud(image_col, image_depth):
-        #Giving two frames, a colored and a grey one, of the same lego piece,
-        #the function returns the corresponding Point Cloud.
-        #@param image_col: colored frame
-        ##param image_depth: image reporting depth information
+
+
+    def point_cloud(self, image_col, image_depth):
+        """
+        Giving two frames, a colored and a grey one, of the same lego piece,
+        the function returns the corresponding Point Cloud.
+        @param image_col: colored frame
+        @param image_depth: image reporting depth information
+        """
+
         color_raw = o3d.io.read_image(image_col)
         depth_raw = o3d.io.read_image(image_depth)
         rgbd_image = o3d.geometry.RGBDImage.create_from_color_and_depth(color_raw, depth_raw)
-        #print(rgbd_image)
         pcd = o3d.geometry.PointCloud.create_from_rgbd_image(
             rgbd_image,
             o3d.camera.PinholeCameraIntrinsic(
                 o3d.camera.PinholeCameraIntrinsicParameters.PrimeSenseDefault))
-        return pcd
         # Flip it, otherwise the pointcloud will be upside down
-        #pcd.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
-        #o3d.visualization.draw_geometries([pcd], zoom=0.5)
-"""
-"""
+        pcd.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
+        o3d.visualization.draw_geometries([pcd])
+
+    """
     @staticmethod
     def transform_binary(point_cloud: str):
         # Read Image
@@ -185,4 +185,4 @@ class DataIngestion:
         binarr = np.where(img > 128, 255, 0)
         # Covert numpy array back to image
         binimg = Image.fromarray(binarr)
-"""
+    """

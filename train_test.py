@@ -19,7 +19,7 @@ class Split:
         dataset = self.get_dataset(self.data_storer)
         train_index, valid_index = train_test_split(range(len(dataset)), test_size=0.3)
 
-        batch_size = 100
+        batch_size = 100 # perchè settato su 100???
         train_dataset = Subset(dataset, train_index)
         train_dataloader = DataLoader(train_dataset, batch_size, shuffle=True)
         valid_dataset = Subset(dataset, valid_index)

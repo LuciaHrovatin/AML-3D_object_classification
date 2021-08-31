@@ -29,15 +29,21 @@ class TNet(nn.Module):
   def _init__(self):
     
      super().__init__()
-    
+
+    # multi layer perceptron
      self.conv1 = torch.nn.Conv1d(3,64,1)            #####
      self.conv2 = torch.nn.Conv1d(64,128,1)          #####
      self.conv3 = torch.nn.Conv1d(128,1024,1)        #####
+
+     # max pooling ?
      self.fc1 = nn.Linear(1024, 512)                 #####
      self.fc2 = nn.Linear(512, 256)                  #####   ALL OF
      self.fc3 = nn.Linear(256, 9)                    #####   THIS PART
+
+    # Rectifier Linear
      self.relu = nn.ReLU()                           #####   IS USED FOR
-                                                     #####   SEMANTIC
+
+    # batch normalization (before or after ReLU?)    #####   SEMANTIC
      self.bn1 = nn.BatchNorm1d(64)                   #####   SEGMENTATION
      self.bn2 = nn.BatchNorm1d(128)                  #####
      self.bn3 = nn.BatchNorm1d(1024)                 #####
@@ -48,7 +54,7 @@ class TNet(nn.Module):
   def forward(self, x):
      #batchsize = x.size()[0]
      x = x.transpose(2,1)
-     x = F.relu(self.bn1(self.conv1(x)))
+     x = F.relu(self.bn1(self.conv1(x))) # here used before
      x = F.relu(self.bn2(self.conv2(x)))
      x = F.relu(self.bn3(self.conv3(x)))
      x = torch.max(x,2,keepdim = True)[0]
