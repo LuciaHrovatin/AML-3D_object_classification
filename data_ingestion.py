@@ -170,7 +170,7 @@ class DataIngestion:
             rgbd_image,
             o3d.camera.PinholeCameraIntrinsic(
                 o3d.camera.PinholeCameraIntrinsicParameters.PrimeSenseDefault))
-        # Flip it, otherwise the pointcloud will be upside down
+        # Flip the pointcloud will be upside down
         pcd.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
         o3d.visualization.draw_geometries([pcd])
 

@@ -3,7 +3,7 @@ import json
 import random
 from torch.utils.data import Dataset, DataLoader
 from torch.utils.data.dataset import Subset
-#from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split
 from data_ingestion import DataIngestion
 
 class Split:

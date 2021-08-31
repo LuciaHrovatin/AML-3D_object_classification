@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F # Convolution functions
+import torch.nn.functional as F  # Convolution functions
 import numpy as np
 
 """
@@ -21,59 +21,58 @@ TL;DR: for the input point cloud x we predict and apply its rotation matrix
 
 """
 
+
 class TNet(nn.Module):
-  """
-  prediction of a transformation matrix
-  """
 
-  def _init__(self):
-    
-     super().__init__()
+    def _init__(self):
+        """
+        prediction of a transformation matrix
+        """
+        super().__init__()
 
-    # multi layer perceptron
-     self.conv1 = torch.nn.Conv1d(3,64,1)            #####
-     self.conv2 = torch.nn.Conv1d(64,128,1)          #####
-     self.conv3 = torch.nn.Conv1d(128,1024,1)        #####
+        # multi layer perceptron
+        self.conv1 = torch.nn.Conv1d(3, 64, 1)
+        self.conv2 = torch.nn.Conv1d(64, 128, 1)
+        self.conv3 = torch.nn.Conv1d(128, 1024, 1)
 
-     # max pooling ?
-     self.fc1 = nn.Linear(1024, 512)                 #####
-     self.fc2 = nn.Linear(512, 256)                  #####   ALL OF
-     self.fc3 = nn.Linear(256, 9)                    #####   THIS PART
+        # max pooling ?
+        self.fc1 = nn.Linear(1024, 512)
+        self.fc2 = nn.Linear(512, 256)
+        self.fc3 = nn.Linear(256, 9)
 
-    # Rectifier Linear
-     self.relu = nn.ReLU()                           #####   IS USED FOR
+        # Rectifier Linear Units
+        self.relu = nn.ReLU()
 
-    # batch normalization (before or after ReLU?)    #####   SEMANTIC
-     self.bn1 = nn.BatchNorm1d(64)                   #####   SEGMENTATION
-     self.bn2 = nn.BatchNorm1d(128)                  #####
-     self.bn3 = nn.BatchNorm1d(1024)                 #####
-     self.bn4 = nn.BatchNorm1d(512)                  #####
-     self.bn5 = nn.BatchNorm1d(256)                  #####
+        # batch normalization (before or after ReLU?)
+        self.bn1 = nn.BatchNorm1d(64)
+        self.bn2 = nn.BatchNorm1d(128)
+        self.bn3 = nn.BatchNorm1d(1024)
+        self.bn4 = nn.BatchNorm1d(512)
+        self.bn5 = nn.BatchNorm1d(256)
 
+    def forward(self, x):
+        # batchsize = x.size()[0]
+        x = x.transpose(2, 1)
+        x = F.relu(self.bn1(self.conv1(x)))
+        x = F.relu(self.bn2(self.conv2(x)))
+        x = F.relu(self.bn3(self.conv3(x)))
+        x = torch.max(x, 2, keepdim=True)[0]
+        x = x.view(-1, 1024)
 
-  def forward(self, x):
-     #batchsize = x.size()[0]
-     x = x.transpose(2,1)
-     x = F.relu(self.bn1(self.conv1(x))) # here used before
-     x = F.relu(self.bn2(self.conv2(x)))
-     x = F.relu(self.bn3(self.conv3(x)))
-     x = torch.max(x,2,keepdim = True)[0]
-     x = x.view(-1, 1024)
+        x = F.relu(self.bn4(self.fc1(x)))
+        x = F.relu(self.bn5(self.fc2(x)))
+        x = self.fc3(x)
 
-     x = F.relu(self.bn4(self.fc1(x)))
-     x = F.relu(self.bn5(self.fc2(x)))
-     x = self.fc3(x)
+        iden = torch.from_numpy(np.array([1, 0, 0, 0, 1, 0, 0, 0, 1]).astype(np.float32)).view(1, 9).repeat
+        if x.is_cuda:
+            iden = iden.cuda()
 
-     iden = torch.from_numpy(np.array([1,0,0,0,1,0,0,0,1]).astype(np.float32)).view(1,9).repeat
-     if x.is_cuda:
-       iden = iden.cuda()
-    
-     x += iden
-     x = x.view(-1,3,3)
+        x += iden
+        x = x.view(-1, 3, 3)
+
 
 '''
 Now we are ready to define PointNet. Our input will have shape [batch_size, n_point, 3].
-
 The structure of the network should be the following:
 
     1. Linear convolution for each point(torch.nn.Conv1d)
@@ -91,39 +90,37 @@ The structure of the network should be the following:
 
 class PointNet(nn.Module):
 
-  def __init__(self, num_classes:int):
+    def __init__(self, num_classes: int):
+        super().__init__()
+        self.tnet = TNet()
+        self.main = nn.Sequential(
+            torch.nn.Conv1d(3, 64, 1),
+            nn.BatchNorm1d(64),
+            nn.ReLU(inplace=True),
 
-    super().__init__()
-    self.tnet = TNet()
+            torch.nn.Conv1d(64, 128, 1),
+            nn.BatchNorm1d(128),
+            nn.ReLU(inplace=True),
 
-    self.main = nn.Sequential(
-        torch.nn.Conv1d(3,64,1),
-        nn.BatchNorm1d(64),
-        nn.ReLU(inplace=True),
+            torch.nn.Conv1d(128, 1024, 1),
+            nn.BatchNorm1d(1024)
+        )
 
-        torch.nn.Conv1d(64,128,1),
-        nn.BatchNorm1d(128),
-        nn.ReLU(inplace=True),
+        self.linear = nn.Linear(1024, num_classes)
+        self.softmax = nn.SoftMax(1)
 
-        torch.nn.Conv1d(128,1024,1),
-        nn.BatchNorm1d(1024)
-    )
+    def forward(self, x):
+        # [batch, n_points, 3]
+        trans = self.tnet(x)
+        x = torch.bmm(x, trans)
 
-    self.linear = nn.Linear(1024, num_classes)
-    self.softmax = nn.SoftMax(1)
+        x = x.transpose(1, 2)
+        # [batch_size, 3, n_points]
+        x = self.main(x)
+        # shape [batch_size, 1024, n_points]
+        x, _ = torch.max(x, 2)
 
-  def forward(self, x):
-    # [batch, n_points, 3]
-    trans = self.tnet(x)
-    x = torch.bmm(x, trans)
+        x = self.linear(x)
+        x = self.softmax(x)
 
-    x = x.transpose(1,2)
-    # [batch, 3, n_points]
-    x = self.main(x)
-    # shape [batch_size, 1024, n_points]
-    x, _ = torch.max(x,2)
-
-    x = self.linear(x)
-    x = self.softmax(x)
-
-    return x
+        return x
