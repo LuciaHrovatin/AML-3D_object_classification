@@ -3,7 +3,7 @@ import os
 from zipfile import ZipFile
 import numpy as np
 import cv2
-#from PIL import Image
+import csv
 import open3d as o3d
 
 
@@ -132,10 +132,12 @@ class DataIngestion:
                                     min_y = vertices[1]
                         if min_y != max_y and min_x != max_x:
                             im = cv2.imread(my_path + element, cv2.IMREAD_COLOR)
-                            im_depth = cv2.imread(my_path + name_image.rstrip(".jpeg") + "_depth.jpeg", cv2.IMREAD_GRAYSCALE)
+                            im_depth = cv2.imread(my_path + name_image.rstrip(".jpeg") + "_depth.jpeg",
+                                                  cv2.IMREAD_GRAYSCALE)
                             if im_depth is not None and im is not None:
                                 rectangle = im[min_y: min_y + (max_y - min_y), min_x: min_x + (max_x - min_x)]
-                                rectangle_depth = im_depth[min_y: min_y + (max_y - min_y), min_x: min_x + (max_x - min_x)]
+                                rectangle_depth = im_depth[min_y: min_y + (max_y - min_y),
+                                                  min_x: min_x + (max_x - min_x)]
                                 savedPath = os.getcwd()
                                 dir = "images_final"
                                 if not os.path.exists(dir):
@@ -144,7 +146,7 @@ class DataIngestion:
                                 cv2.imwrite(name_image.rstrip(".jpeg") + "_" + box + ".jpeg", rectangle)
                                 cv2.imwrite(name_image.rstrip(".jpeg") + "_" + box + "_depth.jpeg", rectangle_depth)
                                 os.chdir(savedPath)
-        return print((actual/total) * 100)
+        return print((actual / total) * 100)
 
     # in a z-map every pixel in a scene is assigned a 0-255 grayscale value based upon its distance from the camera.
     # Traditionally the objects
@@ -154,39 +156,48 @@ class DataIngestion:
     # which in a monochrome (grayscale) 8-bit representation is necessary with values between [0, 255],
     # where 255 represents the closest possible depth value and 0 the most distant possible depth value.
 
-
-def point_cloud(image_col, image_depth):
+    @staticmethod
+    def point_cloud(image_col, image_depth):
         """
-        Giving two frames, a colored and a grey one, of the same lego piece,
-        the function returns the corresponding Point Cloud.
+        Giving two frames, a colored one (RGB image) and a monochromatic one (depth map), of the same lego block,
+        the function returns its name (unique identifier) and Point Cloud.
         @param image_col: colored frame
         @param image_depth: image reporting depth information
+        @return list having as first element the unique identifier of the lego block
+        and as second element the Point Cloud as list of arrays.
         """
-
         color_raw = o3d.io.read_image(image_col)
         depth_raw = o3d.io.read_image(image_depth)
+
+        # create a RGB-D image
         rgbd_image = o3d.geometry.RGBDImage.create_from_color_and_depth(color_raw, depth_raw)
+
+        # create a point cloud
         pcd = o3d.geometry.PointCloud.create_from_rgbd_image(
             rgbd_image,
             o3d.camera.PinholeCameraIntrinsic(
                 o3d.camera.PinholeCameraIntrinsicParameters.PrimeSenseDefault))
-        # Flip the pointcloud will be upside down
+        # Flipping the point cloud
         pcd.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
-        o3d.visualization.draw_geometries([pcd])
-        lego_name = image_col.split("/")[-1].split("_")[-1].strip(".jpeg")
-        return lego_name, np.asarray(pcd.points)
+        lego_block = image_col.split("/")[-1].split("_")[-1].strip(".jpeg")
+        return [lego_block, np.asarray(pcd.points)]
 
-def transform_csv(my_path: str):
-    tot_images = os.listdir(my_path)
-    with open("final_images.csv", "w", newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=["lego_name", "point_cloud"])
-        writer.writeheader()
+    def transform_csv(self, my_path: str):
+        """
+        Saves a csv file of each Lego block and its point cloud representation.
+        @param my_path: string containing the path to the folder storing the frames
+        """
+        tot_images = os.listdir(my_path)
+        with open("final_images.csv", "w", newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=["lego_name", "point_cloud"])
+            writer.writeheader()
 
-        for el in range(len(tot_images), 2):
-            data = point_cloud(my_path + tot_images[el], my_path + tot_images[el+1])
-            writer.writerow({'lego_name': data[0], 'point_cloud"': data[1]})
-
-
-
-
-
+            for el in tot_images:
+                # excludes the depth maps
+                if "depth" not in el:
+                    # RGB image
+                    im_col = my_path + "/" + el
+                    # corresponding depth map
+                    im_depth = my_path + "/" + el.strip(".jpeg") + "_depth.jpeg"
+                    data = self.point_cloud(image_col=im_col, image_depth=im_depth)
+                    writer.writerow({'lego_name': data[0], 'point_cloud': data[1]})
