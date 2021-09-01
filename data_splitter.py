@@ -29,7 +29,7 @@ class Split:
 
                 ### QUIIIII ####
                 x = np.fromstring(x, sep = " ").reshape((- 1, 3))
-                print("ciao", np.shape(x))
+
                 dataset.append([row["lego_name"], x])
 
         # 70/30 validation set approach with random state for reproducible output across multiple calls

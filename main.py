@@ -16,10 +16,11 @@ def main():
     # model_data.extract_objects("./dataset/examples/")
 
     # Save lego block names and point clouds in a csv file
-    # model_data.transform_csv("./images_final")
+    model_data.transform_csv("./images_final")
+    print("end")
 
     #### DATA TRANSFORMATION ###
-
+"""
     split = Split(model_data, 50)
 
     # generate train/test set
@@ -37,7 +38,7 @@ def main():
     print("HERE2")
     # train and eval with pytorch classes
     image_classifier.train_net(train_loader, test_loader, model)
-
+"""
 
 if __name__ == '__main__':
     main()

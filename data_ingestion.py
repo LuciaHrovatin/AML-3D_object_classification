@@ -5,6 +5,8 @@ import numpy as np
 import cv2
 import csv
 import open3d as o3d
+from numpy import savetxt
+from sklearn import preprocessing
 
 
 class DataIngestion:
@@ -179,19 +181,20 @@ class DataIngestion:
         Saves a csv file of each Lego block and its point cloud representation.
         @param my_path: string containing the path to the folder storing the frames
         """
+
         tot_images = os.listdir(my_path)
-        with open("final_images.csv", "w", newline='') as f:
-            writer = csv.DictWriter(f, fieldnames=["lego_name", "point_cloud"])
-            writer.writeheader()
+        for el in tot_images:
+            # exclude depth maps
+            if el.find("depth") == -1:
+                # RGB image
+                im_col = my_path + "/" + el
 
-            for el in tot_images:
-                # exclude depth maps
-                if "depth" not in el:
-                    # RGB image
-                    im_col = my_path + "/" + el
+                # corresponding depth map
+                im_depth = my_path + "/" + el.strip(".jpeg") + "_depth.jpeg"
 
-                    # corresponding depth map
-                    im_depth = my_path + "/" + el.strip(".jpeg") + "_depth.jpeg"
+                data = self.point_cloud(image_col=im_col, image_depth=im_depth)
+                np.save('final_images.npy', data[1], allow_pickle=True)
+                with open("labels.bin", "wb") as f:
+                    f.write(bytes(data[0], "utf-8"))
 
-                    data = self.point_cloud(image_col=im_col, image_depth=im_depth)
-                    writer.writerow({'lego_name': data[0], 'point_cloud': data[1]})
+
