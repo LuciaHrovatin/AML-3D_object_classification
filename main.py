@@ -1,5 +1,5 @@
 from data_ingestion import DataIngestion
-from train_test import Split
+from data_splitter import Split
 
 #### DATA INGESTION ##
 model_data = DataIngestion()
