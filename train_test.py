@@ -1,10 +1,11 @@
-
 import json
 import random
 from torch.utils.data import Dataset, DataLoader
 from torch.utils.data.dataset import Subset
 from sklearn.model_selection import train_test_split
 from data_ingestion import DataIngestion
+import csv
+
 
 class Split:
 
@@ -14,20 +15,26 @@ class Split:
         be used for analysis and validation of the model
         '''
         self.my_db_class = data_ingestor
+        self.batch_size = batch_size
         self.train_loader = None
         self.test_loader = None
-        self.batch_size = batch_size
 
     def train_test(self):
-        dataset = self.get_dataset(self.data_storer) # da modificareeee!!!! <- CSV
+        dataset = []
+        with open("final_images.csv", mode="r") as f:
+            csv_reader = csv.DictReader(f)
+            for row in csv_reader:
+                dataset.append([row["lego_name"], row['point_cloud']])
 
-        train_index, test_index = train_test_split(range(len(dataset)), test_size=0.3)
-
+        # 70/30 validation set approach with random state for reproducible output across multiple calls
+        train_index, test_index = train_test_split(range(len(dataset)), test_size=0.3, random_state=2)
         train_set = Subset(dataset, train_index)
         self.train_loader = DataLoader(train_set, self.batch_size, shuffle=True)
         test_set = Subset(dataset, test_index)
         self.test_loader = DataLoader(test_set, self.batch_size, shuffle=False)
-        
+
+
+"""      
     # evaluation
     def eval_net(self, net, test_loader,epoch_i):
       net = net.eval()
@@ -89,7 +96,4 @@ class Split:
         plt.plot(losses)
         plt.show()
 
-
-
-
-
+"""

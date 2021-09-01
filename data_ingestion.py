@@ -136,25 +136,16 @@ class DataIngestion:
                                                   cv2.IMREAD_GRAYSCALE)
                             if im_depth is not None and im is not None:
                                 rectangle = im[min_y: min_y + (max_y - min_y), min_x: min_x + (max_x - min_x)]
-                                rectangle_depth = im_depth[min_y: min_y + (max_y - min_y),
-                                                  min_x: min_x + (max_x - min_x)]
+                                rectangle_depth = im_depth[min_y: min_y + (max_y - min_y), min_x: min_x + (max_x - min_x)]
                                 savedPath = os.getcwd()
-                                dir = "images_final"
-                                if not os.path.exists(dir):
-                                    os.mkdir(dir)
-                                os.chdir(dir)
+                                new_dir = "images_final"
+                                if not os.path.exists(new_dir):
+                                    os.mkdir(new_dir)
+                                os.chdir(new_dir)
                                 cv2.imwrite(name_image.rstrip(".jpeg") + "_" + box + ".jpeg", rectangle)
                                 cv2.imwrite(name_image.rstrip(".jpeg") + "_" + box + "_depth.jpeg", rectangle_depth)
                                 os.chdir(savedPath)
         return print((actual / total) * 100)
-
-    # in a z-map every pixel in a scene is assigned a 0-255 grayscale value based upon its distance from the camera.
-    # Traditionally the objects
-    # - closest to the camera are white
-    # - the objects furthest from the camera are black
-    # A depth map only contains the distance or Z information for each pixel
-    # which in a monochrome (grayscale) 8-bit representation is necessary with values between [0, 255],
-    # where 255 represents the closest possible depth value and 0 the most distant possible depth value.
 
     @staticmethod
     def point_cloud(image_col, image_depth):
@@ -162,8 +153,9 @@ class DataIngestion:
         Giving two frames, a colored one (RGB image) and a monochromatic one (depth map), of the same lego block,
         the function returns its name (unique identifier) and Point Cloud.
         @param image_col: colored frame
-        @param image_depth: image reporting depth information
-        @return list having as first element the unique identifier of the lego block
+        @param image_depth: image reporting depth information where each pixel is assigned a 0-255 grayscale value,
+        where 255 represents the closest depth value and 0 the most distant one.
+        @return a list having as first element the unique identifier of the lego block
         and as second element the Point Cloud as list of arrays.
         """
         color_raw = o3d.io.read_image(image_col)
@@ -172,12 +164,12 @@ class DataIngestion:
         # create a RGB-D image
         rgbd_image = o3d.geometry.RGBDImage.create_from_color_and_depth(color_raw, depth_raw)
 
-        # create a point cloud
+        # create a point cloud (upside down)
         pcd = o3d.geometry.PointCloud.create_from_rgbd_image(
             rgbd_image,
             o3d.camera.PinholeCameraIntrinsic(
                 o3d.camera.PinholeCameraIntrinsicParameters.PrimeSenseDefault))
-        # Flipping the point cloud
+        # flip the point cloud
         pcd.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
         lego_block = image_col.split("/")[-1].split("_")[-1].strip(".jpeg")
         return [lego_block, np.asarray(pcd.points)]
@@ -193,11 +185,13 @@ class DataIngestion:
             writer.writeheader()
 
             for el in tot_images:
-                # excludes the depth maps
+                # exclude depth maps
                 if "depth" not in el:
                     # RGB image
                     im_col = my_path + "/" + el
+
                     # corresponding depth map
                     im_depth = my_path + "/" + el.strip(".jpeg") + "_depth.jpeg"
+
                     data = self.point_cloud(image_col=im_col, image_depth=im_depth)
                     writer.writerow({'lego_name': data[0], 'point_cloud': data[1]})
