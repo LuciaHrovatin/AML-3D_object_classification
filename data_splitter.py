@@ -1,4 +1,5 @@
 import json
+import pickle
 
 import numpy as np
 from sklearn import preprocessing
@@ -20,8 +21,14 @@ class Split:
         self.train_loader = None
         self.test_loader = None
 
+"""
     def train_test(self):
         dataset = []
+        with open("final_images.npy", "rb") as f:
+            bin_data = f.read()
+            graph_data = pickle.loads(bin_data)
+            print(graph_data)
+
         with open("final_images.csv", mode="r") as f:
             csv_reader = csv.DictReader(f)
             for row in csv_reader:
@@ -80,4 +87,4 @@ class Split:
     def get_test(self):
         return self.test_loader
 
-
+"""

@@ -17,7 +17,7 @@ def main():
 
     # Save lego block names and point clouds in a csv file
     model_data.transform_csv("./images_final")
-    print("end")
+
 
     #### DATA TRANSFORMATION ###
 """

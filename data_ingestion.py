@@ -183,6 +183,8 @@ class DataIngestion:
         """
 
         tot_images = os.listdir(my_path)
+        dict_images = {}
+        count = 0
         for el in tot_images:
             # exclude depth maps
             if el.find("depth") == -1:
@@ -193,8 +195,16 @@ class DataIngestion:
                 im_depth = my_path + "/" + el.strip(".jpeg") + "_depth.jpeg"
 
                 data = self.point_cloud(image_col=im_col, image_depth=im_depth)
-                np.save('final_images.npy', data[1], allow_pickle=True)
-                with open("labels.bin", "wb") as f:
-                    f.write(bytes(data[0], "utf-8"))
+                if data[0] not in dict_images.keys():
+                    dict_images[data[0]] = []
+                dict_images[data[0]].append(data[1].tolist())
+                count +=1
+                print(count)
+
+        json_object = json.dumps(dict_images)
+        with open("final_images.json", "w") as f:
+            f.write(json_object)
+
+
 
 
