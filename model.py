@@ -130,7 +130,7 @@ The structure of the network should be the following:
 
 class PointNetFeature(nn.Module):
 
-    def __init__(self, num_classes: int, global_feat: True, feature_transform: False):
+    def __init__(self, global_feat: True, feature_transform: False):
         super().__init__()
         self.tnet = TNet3()
         
@@ -184,7 +184,7 @@ class PointNetClassification(nn.Module):
     def __init__(self, k=2, feature_transform=False):
         super(PointNetClassification, self).__init__()
         self.feature_transform = feature_transform
-        self.feat = PointNetfeat(global_feat=True, feature_transform=feature_transform)
+        self.feat = PointNetFeature(global_feat=True, feature_transform=feature_transform)
         
         self.main = nn.Sequential(
             
@@ -208,15 +208,7 @@ class PointNetClassification(nn.Module):
         return F.log_softmax(x, dim=1), trans, trans_feat
     
     
-def loss_function(trans):
-    d = trans.size()[1]
-    batchsize = trans.size()[0]
-    I = torch.eye(d)[None, :, :]
-    if trans.is_cuda:
-        I = I.cuda()
-    loss = torch.mean(torch.norm(torch.bmm(trans, trans.transpose(2,1)) - I, dim=(1,2)))
-    return loss
-
+"""
 if __name__ == '__main__':
     sim_data = Variable(torch.rand(32,3,2500))
     trans = TNet3()
@@ -241,3 +233,4 @@ if __name__ == '__main__':
     classifier = PointNetClassification(k = 5)
     out, _, _ = classifier(sim_data)
     print('class', out.size())
+"""

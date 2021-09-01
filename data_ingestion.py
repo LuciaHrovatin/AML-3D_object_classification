@@ -172,7 +172,7 @@ class DataIngestion:
         # flip the point cloud
         pcd.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
         lego_block = image_col.split("/")[-1].split("_")[-1].strip(".jpeg")
-        return [lego_block, np.asarray(pcd.points)]
+        return lego_block, np.asarray(pcd.points)
 
     def transform_csv(self, my_path: str):
         """
