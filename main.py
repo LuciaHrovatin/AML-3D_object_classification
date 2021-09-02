@@ -4,40 +4,48 @@ from model import PointNetClassification
 from solver import PointNetClassifier
 
 
-
 def main():
-    ### DATA INGESTION ##
+    ################## DATA INGESTION ###################
+
     model_data = DataIngestion()
 
-    # Unfold the data and save them in a folder
+    # If "lego_dataset.zip" uncomment the following lines (1, 2, 4):
+    # 1. Unfold the data and save them in a folder
     # model_data.unzip_file("lego_dataset.zip")
 
-    # Extract lego block frames from the RGB and depth scenes
+    # 2. Extract lego block frames from the RGB and depth scenes
     # model_data.extract_objects("./dataset/examples/")
 
-    # Save lego block names and point clouds in a csv file
-    # model_data.transform_csv("./images_final")
+    # If "images_final.zip" uncomment ONLY the lines 3 - 4:
+    # 3. Unfold "images_final.zip" and save them in a new folder
+    # model_data.unzip_file("images_final.zip")
 
-    num_classes = model_data.get_objects()
-    ### DATA TRANSFORMATION ###
+    # 4. Transform data in point clouds and save them in binary files
+    # model_data.transform_binary("./images_final")
 
-    split = Split(model_data, 50)
+    ################## DATA SPLIT ###################
+
+    num_classes = model_data.num_classes()
+
+    # it is possible to change the batch size
+    split = Split(50)
 
     # generate train/test set
     split.train_test()
-
-    ### MODEL ###
-    # init the model
-    model = PointNetClassification(k=num_classes)
-
     train_loader = split.get_train()
     test_loader = split.get_test()
 
-    # init Image Classifier
-    image_classifier = PointNetClassifier(batch_size=50, n_epochs=1)   ### questo andrebbe aumentato, sia il batch size che n_epochs
+    ################## MODEL ###################
 
-    # train and eval with pytorch classes
+    # init the model
+    model = PointNetClassification(n_classes=num_classes)
+
+    # init image Classifier
+    image_classifier = PointNetClassifier(batch_size=50, n_epochs=10)
+
+    # train and eval
     image_classifier.train_net(train_loader, test_loader, model)
+
 
 if __name__ == '__main__':
     main()

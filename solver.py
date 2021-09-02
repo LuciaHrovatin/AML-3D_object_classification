@@ -1,15 +1,15 @@
-import torch
-import torch.nn as nn
+import statistics
 import torch.optim as optim
-import numpy as np
-import random
-
-from numpy import shape
-
 from model import *
-from tqdm import tqdm
+import matplotlib.pyplot as plt
+
 
 def count_parameters(model):
+    """
+    Counts the number of parameters embedded in the model
+    @param model: initialise a specific model
+    @return int: the sum of parameters
+    """
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
@@ -25,37 +25,42 @@ class PointNetClassifier:
         optimizer = torch.optim.Adam(model.parameters(), lr=self.learning_rate)
         scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.96)
 
-        def train_step(data, labels):
+        def train_step(train_x, train_y):
             optimizer.zero_grad()
-            data = torch.transpose(data, 2, 1)
+            train_x = torch.transpose(train_x, 2, 1)
 
-            preds = model(data.float())
-
-            loss = loss_fnc(preds[0], labels)
+            preds = model(train_x.float())
+            loss = loss_fnc(preds[0], train_y.long())
             loss.backward()
             optimizer.step()
-            correct_classification = torch.eq(labels, torch.max(preds[0], -1).indices)
-            accuracy = torch.sum(correct_classification).float() / labels.shape[0] * 100
+            correct_classification = torch.eq(train_y, torch.max(preds[0], -1).indices)
+            accuracy = torch.sum(correct_classification).float() / train_y.shape[0] * 100
             return loss, accuracy
 
-        def test_step(data, labels):
-
-            data = torch.transpose(data, 2, 1)
-            # we deactivate torch autograd
+        def test_step(test_x, test_y):
+            test_x = torch.transpose(test_x, 2, 1)
             with torch.no_grad():
-                preds = model(data.float())
-            loss = loss_fnc(preds[0], labels.long())
+                preds = model(test_x.float())
+            loss = loss_fnc(preds[0], test_y.long())
             return loss, preds[0]
 
         best_accuracy = 0.0
-        for e in range(self.n_epochs):
 
-            # we activate dropout, BN params
+        # for the graph
+        losses = []
+        val = []
+
+        for e in range(self.n_epochs):
             model.train()
-            #count = 0 # QUESTO è da togliere!!! per far partire più di un batch
+
+            # for the graph
+            batch_loss_value = []
             for i, batch in enumerate(train_loader):
                 data, labels = batch
                 batch_loss, batch_accuracy = train_step(data, labels)
+
+                # for the graph
+                batch_loss_value.append(batch_loss.item())
 
                 if i % 1 == 0:
                     print('[{0}-{1:03}] loss: {2:0.05}, batch_accuracy: {3:0.03}'.format(
@@ -64,27 +69,32 @@ class PointNetClassifier:
                         batch_accuracy.detach().numpy()))
                 if i == 0:
                     print('number of model parameters {}'.format(count_parameters(model)))
-                #if count == 0:  # QUESTO è da togliere!!! per far partire più di un batch
-                #    break       # QUESTO è da togliere!!! per far partire più di un batch
-
-            # we call scheduler to decrease LR
+            losses.append(statistics.mean(batch_loss_value))
             scheduler.step()
-
             model.eval()
 
-            # Testing the whole test dataset
+            # Testing the model
             test_preds = []
             test_labels = []
             total_loss = []
+
+            # for the graph
+            val_losses = []
 
             for i, batch in enumerate(test_loader):
                 data, labels = batch
                 batch_loss, preds = test_step(data, labels)
 
+                # for the graph
+                val_losses.append(batch_loss.item())
+
                 batch_preds = torch.max(preds, -1).indices
                 test_preds.append(batch_preds)
                 test_labels.append(labels)
                 total_loss.append(batch_loss)
+
+            # for the graph
+            val.append(statistics.mean(val_losses))
 
             test_preds = torch.cat(test_preds, dim=0).view(-1)
             test_labels = torch.cat(test_labels, dim=0).view(-1)
@@ -92,8 +102,8 @@ class PointNetClassifier:
             assert test_preds.shape[0] == test_labels.shape[0]
 
             loss = sum(total_loss) / len(total_loss)
-            eq = torch.eq(test_labels, test_preds).sum()
-            test_accuracy = (eq / test_labels.shape[0]) * 100
+            correct_classifications = torch.eq(test_labels, test_preds).sum()
+            test_accuracy = (correct_classifications / test_labels.shape[0]) * 100
             if test_accuracy > best_accuracy:
                 best_accuracy = test_accuracy
             print('End of Epoch {0}/{1:03} -> loss: {2:0.05}, test accuracy: {3:0.03} - best accuracy: {4:0.03}'.format(
@@ -102,5 +112,12 @@ class PointNetClassifier:
                 test_accuracy.numpy(),
                 best_accuracy))
 
-
-
+        # It prints a graph at the end of the entire procedure
+        plt.figure(figsize=(10, 5))
+        plt.title("Training and Validation Loss")
+        plt.plot(val, label="val")
+        plt.plot(losses, label="train")
+        plt.xlabel("n_epochs")
+        plt.ylabel("Loss")
+        plt.legend()
+        plt.show()

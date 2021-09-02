@@ -1,32 +1,15 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F  # Convolution functions
+import torch.nn.functional as F
 import numpy as np
 from torch.autograd import Variable
-
-"""
-T-Net adds invariance to rotations
-
-Consider we have a point cloud x - matrix of size 2048x3. T-net is a fcn of x that returns a matrix of shape 3x3. Since all points are located in a 3D space, we can consider the output of T-net as a transformation matrix and can multiply it on x.
-
-x <- x ° Tnet(x),
-
-where ° stands for matrix multiplication.
-
-    We interpret TNet(x) as a matrix of transformation (i.e. rotation or reflection matrix)
-      that takes the point cloud x as input and returns a 3x3 matrix
-    We learn the transformation through NN-training
-
-TL;DR: for the input point cloud x we predict and apply its rotation matrix
-
-
-"""
 
 
 class TNet3(nn.Module):
     def __init__(self):
         """
-        prediction of a transformation matrix
+        TNet3(x) is a input alignment network. It is a matrix of transformation (i.e., rotation or reflection matrix)
+        that takes the Point Cloud x as input and returns a 3x3 matrix adding invariance to rotations.
         """
         super(TNet3, self).__init__()
 
@@ -42,7 +25,7 @@ class TNet3(nn.Module):
         # Rectifier Linear Units
         self.relu = nn.ReLU()
 
-        # batch normalization (before or after ReLU?)
+        # batch normalization
         self.bn1 = nn.BatchNorm1d(64)
         self.bn2 = nn.BatchNorm1d(128)
         self.bn3 = nn.BatchNorm1d(1024)
@@ -61,22 +44,32 @@ class TNet3(nn.Module):
         x = F.relu(self.bn5(self.fc2(x)))
         x = self.fc3(x)
 
-        iden = Variable(torch.from_numpy(np.array([1, 0, 0, 0, 1, 0, 0, 0, 1]).astype(np.float32))).view(1, 9).repeat(batchsize, 1)
+        iden = Variable(torch.from_numpy(np.array([1, 0, 0, 0, 1, 0, 0, 0, 1]).astype(np.float32))).view(1, 9).repeat(
+            batchsize, 1)
 
         x += iden
         x = x.view(-1, 3, 3)
 
         return x
 
+
 class TNet64(nn.Module):
     def __init__(self, k=64):
+        """
+        TNet64(x, n_classes) is a point feature alignment network. It resembles the big network and is composed
+        by basic modules of point independent feature extraction, max pooling and fully connected layers.
+        @param k: set to 64 accordingly to the original PointNet architecture
+        """
         super(TNet64, self).__init__()
+
         self.conv1 = torch.nn.Conv1d(k, 64, 1)
         self.conv2 = torch.nn.Conv1d(64, 128, 1)
         self.conv3 = torch.nn.Conv1d(128, 1024, 1)
+
         self.fc1 = nn.Linear(1024, 512)
         self.fc2 = nn.Linear(512, 256)
-        self.fc3 = nn.Linear(256, k*k)
+        self.fc3 = nn.Linear(256, k * k)
+
         self.relu = nn.ReLU()
 
         self.bn1 = nn.BatchNorm1d(64)
@@ -100,38 +93,29 @@ class TNet64(nn.Module):
         x = F.relu(self.bn5(self.fc2(x)))
         x = self.fc3(x)
 
-        iden = Variable(torch.from_numpy(np.eye(self.k).flatten().astype(np.float32))).view(1,self.k*self.k).repeat(batchsize,1)
+        iden = Variable(torch.from_numpy(np.eye(self.k).flatten().astype(np.float32))).view(1, self.k * self.k).repeat(
+            batchsize, 1)
 
         x += iden
         x = x.view(-1, self.k, self.k)
         return x
 
 
-'''
-Now we are ready to define PointNet. Our input will have shape [batch_size, n_point, 3].
-The structure of the network should be the following:
-
-    1. Linear convolution for each point(torch.nn.Conv1d)
-    2. Batch Norm for each point (64)
-    3. ReLU for each point
-    4. Linear convolution for each point(torch.nn.Conv1d)
-    5. Batch Norm for each point (128)
-    6. ReLU for each point
-    7. Permutation-invariant operation (max, sum)
-    8. Multi-Layer perceptron
-    9. Output size: [batch_size, num_classes]
-
-'''
-
-
 class PointNetFeature(nn.Module):
-    def __init__(self, global_feat: True, feature_transform: False):
+    def __init__(self, global_feature: True, feature_transform: False):
+        """
+        Internal network whose input has shape [batch_size, 1024, 3]. It is structured following
+        the directives of the original PointNet architecture.
+        @param global_feature: by default it is set to True
+        @param feature_transform: by default it is set up to False. If switched to True, a point feature alignment
+        involving the TNet64() is performed
+        """
         super().__init__()
-        self.tnet = TNet3()
-        
+        self.tnet_input = TNet3()
+
         self.conv1 = torch.nn.Conv1d(3, 64, 1)
         self.bn1 = nn.BatchNorm1d(64)
-        
+
         self.main = nn.Sequential(
             torch.nn.Conv1d(64, 128, 1),
             nn.BatchNorm1d(128),
@@ -140,100 +124,83 @@ class PointNetFeature(nn.Module):
             torch.nn.Conv1d(128, 1024, 1),
             nn.BatchNorm1d(1024)
         )
-        
-        self.global_feat = global_feat
+
+        self.global_feat = global_feature
         self.feature_transform = feature_transform
         if self.feature_transform:
-            self.ftnet = TNet64()
-
+            self.feature_net = TNet64()
 
     def forward(self, x):
         number_points = x.size()[2]
-        trans = self.tnet(x)
+        transformed_matrix = self.tnet_input(x)
         x = x.transpose(2, 1)
-        x = torch.bmm(x, trans)
+        x = torch.bmm(x, transformed_matrix)
         x = x.transpose(2, 1)
+
         x = F.relu(self.bn1(self.conv1(x)))
 
         if self.feature_transform:
-            trans_feat = self.ftnet(x)
-            x = x.transpose(2,1)
-            x = torch.bmm(x, trans_feat)
-            x = x.transpose(2,1)
+            transformed_features = self.feature_net(x)
+            x = x.transpose(2, 1)
+            x = torch.bmm(x, transformed_features)
+            x = x.transpose(2, 1)
         else:
-            trans_feat = None
+            transformed_features = None
 
-        pointfeatures = x
+        point_features = x
         x = self.main(x)
 
         x = torch.max(x, 2, keepdim=True)[0]
         x = x.view(-1, 1024)
+
         if self.global_feat:
-            return x, trans, trans_feat
+            return x, transformed_matrix, transformed_features
         else:
             x = x.view(-1, 1024, 1).repeat(1, 1, number_points)
-            return torch.cat([x, pointfeatures], 1), trans, trans_feat
+            return torch.cat([x, point_features], 1), transformed_matrix, transformed_features
+
 
 class PointNetClassification(nn.Module):
-    def __init__(self, k: int, feature_transform=False):
+    def __init__(self, n_classes: int, feature_transform=False):
+        """
+        Last Multi-Layer Perceptron classifier trained  on the shape global features for block classification.
+        @param n_classes: total number of classes (i.e., Lego pieces)
+        @param feature_transform: by default it is set up to False. If switched to True, a point feature
+        alignment involving the TNet64() is performed.
+        """
         super(PointNetClassification, self).__init__()
         self.feature_transform = feature_transform
-        self.feat = PointNetFeature(global_feat=True, feature_transform=feature_transform)
-        
+        self.feat = PointNetFeature(global_feature=True, feature_transform=feature_transform)
+
         self.main = nn.Sequential(
-            
+
             nn.Linear(1024, 512),
             nn.BatchNorm1d(512),
-            nn.ReLU(inplace = True),
-            
+            nn.ReLU(inplace=True),
+
             nn.Linear(512, 256),
-            nn.Dropout(p=0.2),
+            nn.Dropout(p=0.3),
             nn.BatchNorm1d(256),
-            nn.ReLU(inplace = True),
-            
-            nn.Linear(256, k)
-            
+            nn.ReLU(inplace=True),
+
+            nn.Linear(256, n_classes)
         )
-        
 
     def forward(self, x):
         x, trans, trans_feat = self.feat(x)
         x = self.main(x)
         return F.log_softmax(x, dim=1), trans, trans_feat
-    
-    
-"""
-if __name__ == '__main__':
-    sim_data = Variable(torch.rand(32,3,2500))
-    trans = TNet3()
-    out = trans(sim_data)
-    print('stn', out.size())
-    print('loss', loss_function(out))
 
-    sim_data_64d = Variable(torch.rand(32, 64, 2500))
-    trans = TNet64(k=64)
-    out = trans(sim_data_64d)
-    print('stn64d', out.size())
-    print('loss', loss_function(out))
 
-    pointfeat = PointNetfeat(global_feat=True)
-    out, _, _ = pointfeat(sim_data)
-    print('global feat', out.size())
-
-    pointfeat = PointNetfeat(global_feat=False)
-    out, _, _ = pointfeat(sim_data)
-    print('point feat', out.size())
-
-    classifier = PointNetClassification(k = 5)
-    out, _, _ = classifier(sim_data)
-    print('class', out.size())
-"""
-
-def feature_transform_regularizer(trans):
-    d = trans.size()[1]
-    batchsize = trans.size()[0]
-    I = torch.eye(d)[None, :, :]
-    if trans.is_cuda:
-        I = I.cuda()
-    loss = torch.mean(torch.norm(torch.bmm(trans, trans.transpose(2,1)) - I, dim=(1,2)))
+def feature_transform_regularizer(transformed_matrix):
+    """
+    If the TNet64  is included in the architecture, a further regularization term
+    to the softmax training loss is required. This procedure should constrain the
+    points feature transformation matrix to be close to an orthogonal matrix.
+    @param transformed_matrix: matrix coming from the TNet64 alignment network
+    @return: regularizaed softmax loss
+    """
+    d = transformed_matrix.size()[1]
+    Identity_matrix = torch.eye(d)[None, :, :]
+    loss = torch.mean(torch.norm(torch.bmm(transformed_matrix, transformed_matrix.transpose(2, 1)) - Identity_matrix, dim=(1, 2)))
     return loss
