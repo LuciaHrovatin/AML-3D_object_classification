@@ -20,71 +20,63 @@ class Split:
         self.batch_size = batch_size
         self.train_loader = None
         self.test_loader = None
+        self.train_labels = None
+        self.test_labels = None
+        self.avg_pts = 0
 
-"""
     def train_test(self):
-        dataset = []
-        with open("final_images.npy", "rb") as f:
-            bin_data = f.read()
-            graph_data = pickle.loads(bin_data)
-            print(graph_data)
-
-        with open("final_images.csv", mode="r") as f:
-            csv_reader = csv.DictReader(f)
-            for row in csv_reader:
-                x = row['point_cloud'].replace("["," ").replace("]", " ")
-
-                ### QUIIIII ####
-                x = np.fromstring(x, sep = " ").reshape((- 1, 3))
-
-                dataset.append([row["lego_name"], x])
+        with open("labels_final.pkl", "rb") as f:
+            labels = pickle.load(f)
+        with open("images_final.pkl", "rb") as f:
+            images = pickle.load(f)
 
         # 70/30 validation set approach with random state for reproducible output across multiple calls
-
-        train_index, test_index = train_test_split(range(len(dataset)), test_size=0.3, random_state=2)
+        train_index, test_index = train_test_split(range(len(images)), test_size=0.3, random_state=2)
 
         train_x = []
         train_y = []
         test_x = []
         test_y = []
 
-        for index in range(len(dataset)):
+        for index in range(len(images)):
             if index in train_index:
-                train_x.append(dataset[index][1])
-                train_y.append(dataset[index][0])
+                train_x.append(images[index])
+                train_y.append(labels[index])
             elif index in test_index:
-                test_x.append(dataset[index][1])
-                test_y.append(dataset[index][0])
+                test_x.append(images[index])
+                test_y.append(labels[index])
             else:
                 break
+            self.avg_pts += len(images[index])
+        return print(self.avg_pts/len(images))
 
-
+"""
+        self.train_loader = train_x
+        self.train_labels = train_y
+        self.test_loader = test_x
+        self.test_labels = test_y
+"""
+        """
         le = preprocessing.LabelEncoder()
         train_y = le.fit_transform(train_y)
         test_y = le.fit_transform(test_y)
         train_y = torch.as_tensor(train_y)
         test_y = torch.as_tensor(test_y)
 
-
-
         # transform to torch tensor
-        #print(train_x[43])
-        #train_x = torch.stack([torch.Tensor(el) for el in train_x])
-        #test_x = torch.stack([torch.Tensor(el) for el in test_x])
-        #train_y = torch.Tensor(train_y)
+        train_x = torch.Tensor(train_x)
         test_x = torch.Tensor(test_x)
-        #test_y = torch.Tensor(test_y)
-        print(type(test_x))
-        train_set = Dataset(train_x, train_y)
-        test_set = Dataset(test_x, test_y)
+        train_set = TensorDataset(train_x, train_y)
+        test_set = TensorDataset(test_x, test_y)
         print("hi there")
         self.train_loader = DataLoader(train_set, self.batch_size, shuffle=True, num_workers=2)
         self.test_loader = DataLoader(test_set, self.batch_size, shuffle=False, num_workers=2)
-
+"""
     def get_train(self):
-        return print(self.train_loader)
+        return self.train_loader, self.train_labels
 
     def get_test(self):
-        return self.test_loader
+        return self.test_loader, self.test_labels
 
-"""
+
+

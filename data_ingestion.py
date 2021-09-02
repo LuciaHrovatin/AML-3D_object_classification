@@ -1,5 +1,6 @@
 import json
 import os
+import pickle
 from zipfile import ZipFile
 import numpy as np
 import cv2
@@ -174,7 +175,7 @@ class DataIngestion:
         # flip the point cloud
         pcd.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
         lego_block = image_col.split("/")[-1].split("_")[-1].strip(".jpeg")
-        return lego_block, np.asarray(pcd.points)
+        return lego_block, pcd
 
     def transform_csv(self, my_path: str):
         """
@@ -183,8 +184,8 @@ class DataIngestion:
         """
 
         tot_images = os.listdir(my_path)
-        dict_images = {}
-        count = 0
+        labels = []
+        images = []
         for el in tot_images:
             # exclude depth maps
             if el.find("depth") == -1:
@@ -195,15 +196,15 @@ class DataIngestion:
                 im_depth = my_path + "/" + el.strip(".jpeg") + "_depth.jpeg"
 
                 data = self.point_cloud(image_col=im_col, image_depth=im_depth)
-                if data[0] not in dict_images.keys():
-                    dict_images[data[0]] = []
-                dict_images[data[0]].append(data[1].tolist())
-                count +=1
-                print(count)
+                labels.append(data[0])
+                images.append(np.asarray(data[1].points))
 
-        json_object = json.dumps(dict_images)
-        with open("final_images.json", "w") as f:
-            f.write(json_object)
+        with open("images_final.pkl", "wb") as f:
+            pickle.dump(images, f)
+        with open('labels_final.pkl', 'wb') as f:
+            pickle.dump(labels, f)
+
+
 
 
 

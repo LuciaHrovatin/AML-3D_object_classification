@@ -16,11 +16,11 @@ def main():
     # model_data.extract_objects("./dataset/examples/")
 
     # Save lego block names and point clouds in a csv file
-    model_data.transform_csv("./images_final")
+    # model_data.transform_csv("./images_final")
 
 
     #### DATA TRANSFORMATION ###
-"""
+
     split = Split(model_data, 50)
 
     # generate train/test set
@@ -28,17 +28,14 @@ def main():
 
     # init the model
     model = PointNetClassification()
-
+"""
     # dataloaders -> they use multiprocessing for loading data
     train_loader = split.get_train()
     test_loader = split.get_test()
-    print("HERE")
     # init Image Classifier
     image_classifier = PointNetClassifier(batch_size=32, n_epochs=100)
-    print("HERE2")
     # train and eval with pytorch classes
-    image_classifier.train_net(train_loader, test_loader, model)
+    image_classifier.train(train_loader[0], train_loader[1], test_loader[0], test_loader[1], model)
 """
-
 if __name__ == '__main__':
     main()
