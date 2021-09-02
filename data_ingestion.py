@@ -21,6 +21,7 @@ class DataIngestion:
         """
         Extracts all the files stored in the zip file saving
         them in the current directory in the "dataset" folder.
+
         @param zip_folder: name of the zipped folder from which the files are extracted
         """
         if "lego_dataset" in zip_folder:
@@ -32,6 +33,7 @@ class DataIngestion:
     def extract_json(self, my_path: str):
         """
         This function detects and parses the json files in the folder "examples".
+
         @param my_path: directory of the folder
         @return final_db: dictionary with the following structure {image_name: {y : [bbox]}}
         """
@@ -51,6 +53,7 @@ class DataIngestion:
         """
         It parses the json file passed as parameter, returning a dictionary
         with y (lego names) as keys and bbox as values.
+
         @param element: name of the json
         @return scene: dictionary with structure {y: [bbox]}
         """
@@ -71,6 +74,7 @@ class DataIngestion:
         The function takes as input the name of an image and
         returns the list of bounding boxes stored in the json file.
         If the name is not found, the function yields an error.
+
         @param image_name: name of the image
         @return the list of bounding boxes
         """
@@ -88,6 +92,7 @@ class DataIngestion:
         stored in the final_db.json. Generalizations are applied in order to avoid corrupted files
         and unsupported coordinates. It stores the RGB frame and the corresponding depth map in the
         folder images_final.
+
         @param my_path: directory to the lego_dataset folder from which the scenes are extracted.
         """
         tot_images = os.listdir(my_path)
@@ -142,8 +147,9 @@ class DataIngestion:
     @staticmethod
     def point_cloud(image_col, image_depth):
         """
-        Giving two frames, a colored one (RGB image) and a monochromatic one (depth map), of the same lego block,
+        Given two frames of the same lego block, a colored one (RGB image) and a monochromatic one (depth map),
         the function returns its name (unique identifier) and Point Cloud.
+
         @param image_col: colored frame
         @param image_depth: image reporting depth information where each pixel is assigned a 0-255 grayscale value,
         where 255 represents the closest depth value and 0 the most distant one.
@@ -170,6 +176,7 @@ class DataIngestion:
         """
         Saves each Lego block label and its point cloud representation in a binary file,
         respectively labels_final.pkl and images_final.pkl.
+
         @param my_path: string containing the path to the folder storing the separate frames (i.e., images_final folder)
         """
 
@@ -198,6 +205,7 @@ class DataIngestion:
         """
         Saves distinct classes (i.e., lego pieces) and
         returns the final number of classes.
+        
         @return integer number of classes
         """
         with open(self.data_storer, ) as f:

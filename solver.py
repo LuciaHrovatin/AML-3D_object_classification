@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 def count_parameters(model):
     """
     Counts the number of parameters embedded in the model
+
     @param model: initialise a specific model
     @return int: the sum of parameters
     """
@@ -14,6 +15,7 @@ def count_parameters(model):
 
 
 class PointNetClassifier:
+    
     def __init__(self, batch_size: int, n_epochs: int, learning_rate=0.0001, feature_transform=False):
         self.n_epochs = n_epochs
         self.batch_size = batch_size

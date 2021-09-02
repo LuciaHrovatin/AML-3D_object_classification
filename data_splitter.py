@@ -56,6 +56,7 @@ class Split:
     def get_train(self):
         """
         When called, it returns the train_loader previously stored.
+
         @return: DataLoader containing the train_set and the corresponding labels (i.e., ground truth).
         """
         return self.train_loader
@@ -63,6 +64,7 @@ class Split:
     def get_test(self):
         """
         When called, it returns the test_loader previously stored.
+        
         @return: DataLoader containing the test_set and the corresponding labels (i.e., ground truth).
         """
         return self.test_loader

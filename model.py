@@ -8,8 +8,9 @@ from torch.autograd import Variable
 class TNet3(nn.Module):
     def __init__(self):
         """
-        TNet3(x) is a input alignment network. It is a matrix of transformation (i.e., rotation or reflection matrix)
-        that takes the Point Cloud x as input and returns a 3x3 matrix adding invariance to rotations.
+        TNet3(x) is an input alignment network. It is a matrix of transformation
+        (i.e., rotation or reflection matrix) that takes the Point Cloud x as input
+        and returns a 3x3 matrix adding invariance to rotations.
         """
         super(TNet3, self).__init__()
 
@@ -56,8 +57,10 @@ class TNet3(nn.Module):
 class TNet64(nn.Module):
     def __init__(self, k=64):
         """
-        TNet64(x, n_classes) is a point feature alignment network. It resembles the big network and is composed
-        by basic modules of point independent feature extraction, max pooling and fully connected layers.
+        TNet64(x, n_classes) is a point feature alignment network. It resembles the big network
+        and is composed by basic modules of point independent feature extraction, max pooling
+        and fully connected layers.
+
         @param k: set to 64 accordingly to the original PointNet architecture
         """
         super(TNet64, self).__init__()
@@ -104,11 +107,12 @@ class TNet64(nn.Module):
 class PointNetFeature(nn.Module):
     def __init__(self, global_feature: True, feature_transform: False):
         """
-        Internal network whose input has shape [batch_size, 1024, 3]. It is structured following
-        the directives of the original PointNet architecture.
+        Internal network whose input has shape [batch_size, 1024, 3]. It is structured
+        following the directives of the original PointNet architecture.
+
         @param global_feature: by default it is set to True
-        @param feature_transform: by default it is set up to False. If switched to True, a point feature alignment
-        involving the TNet64() is performed
+        @param feature_transform: by default it is set up to False. If switched to True,
+        a point feature alignment involving the TNet64() is performed
         """
         super().__init__()
         self.tnet_input = TNet3()
@@ -164,8 +168,9 @@ class PointNetClassification(nn.Module):
     def __init__(self, n_classes: int, feature_transform=False):
         """
         Last Multi-Layer Perceptron classifier trained  on the shape global features for block classification.
+
         @param n_classes: total number of classes (i.e., Lego pieces)
-        @param feature_transform: by default it is set up to False. If switched to True, a point feature
+        @param feature_transform: False by default. If switched to True, a point feature
         alignment involving the TNet64() is performed.
         """
         super(PointNetClassification, self).__init__()
@@ -197,6 +202,7 @@ def feature_transform_regularizer(transformed_matrix):
     If the TNet64  is included in the architecture, a further regularization term
     to the softmax training loss is required. This procedure should constrain the
     points feature transformation matrix to be close to an orthogonal matrix.
+    
     @param transformed_matrix: matrix coming from the TNet64 alignment network
     @return: regularizaed softmax loss
     """

@@ -37,13 +37,13 @@ def main():
 
     ################## MODEL ###################
 
-    # init the model
+    # initialize the model
     model = PointNetClassification(n_classes=num_classes)
 
-    # init image Classifier
+    # initialize the image Classifier
     image_classifier = PointNetClassifier(batch_size=50, n_epochs=10)
 
-    # train and eval
+    # train and evaluation
     image_classifier.train_net(train_loader, test_loader, model)
 
 
