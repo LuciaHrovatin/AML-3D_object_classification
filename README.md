@@ -4,7 +4,9 @@
 The **3D Object Classification with PointNet** project has been developed as final assignment of the Applied Machine Learning course, offered by the University of Trento.
 
 ## Project objective 
-The project aims at deploying an architecture able to perform 3D Lego blocks extraction, transformation and classification. Specifically, the datasets employed have been cleaned and stored in a zip folder.   
+The project aims at deploying an architecture able to perform 3D Lego blocks extraction, transformation and classification. Specifically, the employed dataset has been cleaned and stored in a zip folder called [images_final.zip](https://drive.google.com/file/d/10B4uLcfnGG-srzVUV8F2Lq3v_a9kPoz1/view?usp=sharing).  
+
+**Note:** the dataset can be accessed and downloaded only with a *unitn* account.  
 
 ## Prerequisites 
 
@@ -68,12 +70,16 @@ pip install -r requirements.txt
 ```
 
 ## Usage 
+The project can be run starting from different datasets stored in zipped folders. 
 
-### Upload the zip-folder 
-This project employs only a dataset. 
+### Option 1: "lego_dataset.zip"  
+Download the [lego_dataset.zip](https://drive.google.com/file/d/1fohALgsFKM8VXY1pxoBkeANy_f52IdtL/view?usp=sharing) and save it in the project directory. Uncomment the lines specified in the `main.py` file.   
+
+### Option 2: "images_final.zip"  
+Download the cleaned dataset from [images_final.zip](https://drive.google.com/file/d/10B4uLcfnGG-srzVUV8F2Lq3v_a9kPoz1/view?usp=sharing) and save it in the project directory. Uncomment the lines specified in the `main.py` file.   
 
 ### Run the script 
-After the virtual environment and the zip folder set up, a last step must be manually performed. To start the entire architecture, type in the command line (with the activated virtual environment): 
+After the virtual environment and the zip folder set up (either option 1 or 2), a last step must be performed. To start the entire architecture, type in the command line (with the activated virtual environment): 
 
 - in Unix systems:
     ```
@@ -89,10 +95,11 @@ After the virtual environment and the zip folder set up, a last step must be man
 
 The backend code structure is composed by:
 -   `data_ingestion.py`, containing the functions used to the cleansing procedure applied on the original dataset 
--   `data_splitter.py`, containing the R scripts of the interface graphs and the Exploratory Data Analysis 
--   `src`, containing Python files with specific functions for data collection, data transformation and machine learning training/testing process 
--   `docker-compose.yml`, defining the Docker containers and their relationships  
+-   `data_splitter.py`, containing the functions for splitting the dataset in training and validation set 
+-   `model.py`, contains the PointNet architecture  
+-   `solver.py`, launches the training/testing procedure emplying Adam algorithm, Cross-Entropy loss function and Accuracy   
 -   `main.py`, triggers the entire project 
+-   `final_db.json`, stores the scenes and the bounding boxes coordinates for each Lego block  
 
 ## Overall code structure
 ```
