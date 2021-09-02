@@ -52,7 +52,7 @@ class PointNetClassifier:
 
             # we activate dropout, BN params
             model.train()
-            count = 0 # QUESTO è da togliere!!! per far partire più di un batch
+            #count = 0 # QUESTO è da togliere!!! per far partire più di un batch
             for i, batch in enumerate(train_loader):
                 data, labels = batch
                 batch_loss, batch_accuracy = train_step(data, labels)
@@ -64,8 +64,8 @@ class PointNetClassifier:
                         batch_accuracy.detach().numpy()))
                 if i == 0:
                     print('number of model parameters {}'.format(count_parameters(model)))
-                if count == 0:  # QUESTO è da togliere!!! per far partire più di un batch
-                    break       # QUESTO è da togliere!!! per far partire più di un batch
+                #if count == 0:  # QUESTO è da togliere!!! per far partire più di un batch
+                #    break       # QUESTO è da togliere!!! per far partire più di un batch
 
             # we call scheduler to decrease LR
             scheduler.step()

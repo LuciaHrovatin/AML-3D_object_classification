@@ -34,7 +34,7 @@ def main():
     test_loader = split.get_test()
 
     # init Image Classifier
-    image_classifier = PointNetClassifier(batch_size=2, n_epochs=1)   ### questo andrebbe aumentato, sia il batch size che n_epochs
+    image_classifier = PointNetClassifier(batch_size=50, n_epochs=1)   ### questo andrebbe aumentato, sia il batch size che n_epochs
 
     # train and eval with pytorch classes
     image_classifier.train_net(train_loader, test_loader, model)

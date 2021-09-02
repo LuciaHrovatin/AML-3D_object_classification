@@ -9,7 +9,7 @@
 In order to run this project, the following tools have to be installed on your machine: 
 - Python, preferably [3.8](https://www.python.org/downloads/release/python-380/) 
 
-**Note:** Python version [3.9](https://www.python.org/downloads/release/python-390/) is not supported by some modules (*open3d*).   
+**Note:** Python version [3.9](https://www.python.org/downloads/release/python-390/) may not be supported by some modules (for futher information and updates check [open3d](http://www.open3d.org/docs/latest/getting_started.html)).   
 
 ## Installation 
 
@@ -18,7 +18,7 @@ In order to run this project, the following tools have to be installed on your m
 Clone this repository in a local directory typing in the command line: 
 
 ```
-git clone 
+git clone https://github.com/LuciaHrovatin/AML-3D_object_classification.git
 ```
 
 ### Environment 
