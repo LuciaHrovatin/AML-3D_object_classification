@@ -18,24 +18,26 @@ def main():
     # Save lego block names and point clouds in a csv file
     # model_data.transform_csv("./images_final")
 
-
-    #### DATA TRANSFORMATION ###
+    num_classes = model_data.get_objects()
+    ### DATA TRANSFORMATION ###
 
     split = Split(model_data, 50)
 
     # generate train/test set
     split.train_test()
 
+    ### MODEL ###
     # init the model
-    model = PointNetClassification()
-"""
-    # dataloaders -> they use multiprocessing for loading data
+    model = PointNetClassification(k=num_classes)
+
     train_loader = split.get_train()
     test_loader = split.get_test()
+
     # init Image Classifier
-    image_classifier = PointNetClassifier(batch_size=32, n_epochs=100)
+    image_classifier = PointNetClassifier(batch_size=2, n_epochs=1)   ### questo andrebbe aumentato, sia il batch size che n_epochs
+
     # train and eval with pytorch classes
-    image_classifier.train(train_loader[0], train_loader[1], test_loader[0], test_loader[1], model)
-"""
+    image_classifier.train_net(train_loader, test_loader, model)
+
 if __name__ == '__main__':
     main()
