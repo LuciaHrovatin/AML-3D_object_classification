@@ -4,7 +4,7 @@
 The **3D Object Classification with PointNet** project has been developed as final assignment of the Applied Machine Learning course, offered by the University of Trento.
 
 ## Project objective 
-The project aims at deploying an architecture able to perform 3D Lego blocks extraction, transformation and classification. Specifically, the employed dataset has been cleaned and stored in a zip folder called [images_final.zip](https://drive.google.com/file/d/10B4uLcfnGG-srzVUV8F2Lq3v_a9kPoz1/view?usp=sharing).  
+The project aims at deploying an architecture able to perform 3D Lego blocks extraction, transformation and classification by means of [PointNet](https://arxiv.org/abs/1612.00593) approach. Specifically, the employed dataset has been cleaned and stored in a zip folder called [images_final.zip](https://drive.google.com/file/d/10B4uLcfnGG-srzVUV8F2Lq3v_a9kPoz1/view?usp=sharing).  
 
 **Note:** the dataset can be accessed and downloaded only with a *unitn* account.  
 
