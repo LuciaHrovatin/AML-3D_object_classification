@@ -27,7 +27,7 @@ class DataIngestion:
             self.path = "dataset"
         with ZipFile(zip_folder, 'r') as zipObj:
             # Extract all the contents of zip file in current directory
-            zipObj.extractall(path=self.path_initial)
+            zipObj.extractall(path=self.path)
 
     def extract_json(self, my_path: str):
         """
