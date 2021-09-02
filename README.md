@@ -1,8 +1,10 @@
 # Applied Machine Learning Project
-## 3D Object Classification employing PointNet
+## 3D Object Classification with PointNet
 
+The **3D Object Classification with PointNet** project has been developed as final assignment of the Applied Machine Learning course, offered by the University of Trento.
 
 ## Project objective 
+The project aims at deploying an architecture able to perform 3D Lego blocks extraction, transformation and classification. Specifically, the datasets employed have been cleaned and stored in a zip folder.   
 
 ## Prerequisites 
 
@@ -63,4 +65,43 @@ In the active virtual environment, install all libraries contained in the `requi
 
 ```
 pip install -r requirements.txt
+```
+
+## Usage 
+
+### Upload the zip-folder 
+This project employs only a dataset. 
+
+### Run the script 
+After the virtual environment and the zip folder set up, a last step must be manually performed. To start the entire architecture, type in the command line (with the activated virtual environment): 
+
+- in Unix systems:
+    ```
+    python3 main.py
+    ```
+
+- in Windows systems:
+    ```
+    python main.py
+    ```
+
+# Code structure
+
+The backend code structure is composed by:
+-   `data_ingestion.py`, containing the functions used to the cleansing procedure applied on the original dataset 
+-   `data_splitter.py`, containing the R scripts of the interface graphs and the Exploratory Data Analysis 
+-   `src`, containing Python files with specific functions for data collection, data transformation and machine learning training/testing process 
+-   `docker-compose.yml`, defining the Docker containers and their relationships  
+-   `main.py`, triggers the entire project 
+
+## Overall code structure
+```
+├── .gitignore
+├── data_ingestion.py
+├── data_splitter.py
+├── final_db.json
+├── model.py
+├── solver.py
+├── requirements.txt
+└── main.py
 ```
