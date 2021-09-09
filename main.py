@@ -28,7 +28,7 @@ def main():
     num_classes = model_data.num_classes()
 
     # it is possible to change the batch size
-    split = Split(50)
+    split = Split(32)
 
     # generate train/test set
     split.train_test()
@@ -41,7 +41,7 @@ def main():
     model = PointNetClassification(n_classes=num_classes)
 
     # initialize the image Classifier
-    image_classifier = PointNetClassifier(batch_size=50, n_epochs=10)
+    image_classifier = PointNetClassifier(n_epochs=100)
 
     # train and evaluation
     image_classifier.train_net(train_loader, test_loader, model)

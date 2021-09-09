@@ -120,14 +120,24 @@ class PointNetFeature(nn.Module):
         self.conv1 = torch.nn.Conv1d(3, 64, 1)
         self.bn1 = nn.BatchNorm1d(64)
 
-        self.main = nn.Sequential(
-            torch.nn.Conv1d(64, 128, 1),
-            nn.BatchNorm1d(128),
-            nn.ReLU(inplace=True),
+        self.conv3 = torch.nn.Conv1d(64, 64, 1)
+        self.bn3 = nn.BatchNorm1d(64)
 
-            torch.nn.Conv1d(128, 1024, 1),
-            nn.BatchNorm1d(1024)
-        )
+        self.conv4 = torch.nn.Conv1d(64, 128, 1)
+        self.bn4 = nn.BatchNorm1d(128)
+
+        self.conv5 = torch.nn.Conv1d(128, 1024, 1)
+        self.bn5 = nn.BatchNorm1d(1024)
+
+
+        # self.main = nn.Sequential(
+        #     torch.nn.Conv1d(64, 128, 1),
+        #     nn.BatchNorm1d(128),
+        #     nn.ReLU(inplace=True),
+        #
+        #     torch.nn.Conv1d(128, 1024, 1),
+        #     nn.BatchNorm1d(1024)
+        # )
 
         self.global_feat = global_feature
         self.feature_transform = feature_transform
@@ -152,7 +162,10 @@ class PointNetFeature(nn.Module):
             transformed_features = None
 
         point_features = x
-        x = self.main(x)
+
+        x = F.relu(self.bn3(self.conv3(x)))
+        x = F.relu(self.bn4(self.conv4(x)))
+        x = F.relu(self.bn5(self.conv5(x)))
 
         x = torch.max(x, 2, keepdim=True)[0]
         x = x.view(-1, 1024)
@@ -194,7 +207,8 @@ class PointNetClassification(nn.Module):
     def forward(self, x):
         x, trans, trans_feat = self.feat(x)
         x = self.main(x)
-        return F.log_softmax(x, dim=1), trans, trans_feat
+        #x = F.log_softmax(x, dim=1)
+        return x #F.log_softmax(x, dim=1), trans, trans_feat
 
 
 def feature_transform_regularizer(transformed_matrix):

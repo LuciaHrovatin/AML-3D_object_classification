@@ -16,9 +16,8 @@ def count_parameters(model):
 
 class PointNetClassifier:
     
-    def __init__(self, batch_size: int, n_epochs: int, learning_rate=0.0001, feature_transform=False):
+    def __init__(self, n_epochs: int, learning_rate=0.0001, feature_transform=False):
         self.n_epochs = n_epochs
-        self.batch_size = batch_size
         self.learning_rate = learning_rate
         self.feature_transform = feature_transform
 
@@ -32,10 +31,10 @@ class PointNetClassifier:
             train_x = torch.transpose(train_x, 2, 1)
 
             preds = model(train_x.float())
-            loss = loss_fnc(preds[0], train_y.long())
+            loss = loss_fnc(preds, train_y.long())
             loss.backward()
             optimizer.step()
-            correct_classification = torch.eq(train_y, torch.max(preds[0], -1).indices)
+            correct_classification = torch.eq(train_y, torch.max(preds, -1).indices)
             accuracy = torch.sum(correct_classification).float() / train_y.shape[0] * 100
             return loss, accuracy
 
@@ -43,8 +42,8 @@ class PointNetClassifier:
             test_x = torch.transpose(test_x, 2, 1)
             with torch.no_grad():
                 preds = model(test_x.float())
-            loss = loss_fnc(preds[0], test_y.long())
-            return loss, preds[0]
+            loss = loss_fnc(preds, test_y.long())
+            return loss, preds
 
         best_accuracy = 0.0
 
