@@ -7,10 +7,11 @@ import numpy as np
 
 class Split:
 
-    def __init__(self, batch_size: int):
+    def __init__(self, batch_size: int, n_points=1024):
         self.batch_size = batch_size
         self.train_loader = None
         self.test_loader = None
+        self.n_points = n_points
 
     def train_test(self):
         """
@@ -66,26 +67,26 @@ class Split:
 
         for index in range(len(images)):
             # exclude all the point clouds whose numerosity is less than 1024
-            if index in train_index and len(images[index]) >= 1024:
+            if index in train_index:
                 train_x.append(images[index])
                 train_y.append(labels[index])
-            elif index in test_index and len(images[index]) >= 1024:
+            elif index in test_index:
                 test_x.append(images[index])
                 test_y.append(labels[index])
 
-        #print(np.unique(np.array(train_y)))
-        #print(np.unique(np.array(labels)))
-
-        #le = preprocessing.LabelEncoder()
-        #train_y = le.fit_transform(train_y)
-        #test_y = le.fit_transform(test_y)
         train_y = torch.tensor(train_y)
         test_y = torch.tensor(test_y)
 
-        train_x = torch.stack([torch.from_numpy(el[:1024]) for el in train_x])
-        test_x = torch.stack([torch.from_numpy(el[:1024]) for el in test_x])
+
+        test_x = torch.stack([torch.from_numpy(np.random.choice(len(el), self.n_points, replace=True)) for el in test_x])
+        train_x = torch.stack([torch.from_numpy(np.random.choice(len(el), self.n_points, replace=True)) for el in train_x])
+
+       # test_x = torch.stack([torch.from_numpy(el[:1024]) for el in test_x])
+       # train_x = torch.stack([torch.from_numpy(el[:1024]) for el in train_x])
+
         train_set = TensorDataset(train_x, train_y)
         test_set = TensorDataset(test_x, test_y)
+
         self.train_loader = DataLoader(train_set, self.batch_size, shuffle=True, num_workers=2)
         self.test_loader = DataLoader(test_set, self.batch_size, shuffle=False, num_workers=2)
 
@@ -104,3 +105,4 @@ class Split:
         @return: DataLoader containing the test_set and the corresponding labels (i.e., ground truth).
         """
         return self.test_loader
+

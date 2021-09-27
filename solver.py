@@ -22,7 +22,7 @@ class PointNetClassifier:
         self.feature_transform = feature_transform
 
     def train_net(self, train_loader, test_loader, model):
-        loss_fnc = nn.CrossEntropyLoss()
+        loss_fnc = nn.NLLLoss()
         optimizer = torch.optim.Adam(model.parameters(), lr=self.learning_rate)
         scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.96)
 

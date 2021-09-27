@@ -47,7 +47,8 @@ class TNet3(nn.Module):
 
         iden = Variable(torch.from_numpy(np.array([1, 0, 0, 0, 1, 0, 0, 0, 1]).astype(np.float32))).view(1, 9).repeat(
             batchsize, 1)
-
+        if x.is_cuda:
+            iden = iden.cuda()
         x += iden
         x = x.view(-1, 3, 3)
 
@@ -71,7 +72,7 @@ class TNet64(nn.Module):
 
         self.fc1 = nn.Linear(1024, 512)
         self.fc2 = nn.Linear(512, 256)
-        self.fc3 = nn.Linear(256, k * k)
+        self.fc3 = nn.Linear(256, k*k)
 
         self.relu = nn.ReLU()
 
@@ -89,6 +90,7 @@ class TNet64(nn.Module):
         x = F.relu(self.bn1(self.conv1(x)))
         x = F.relu(self.bn2(self.conv2(x)))
         x = F.relu(self.bn3(self.conv3(x)))
+
         x = torch.max(x, 2, keepdim=True)[0]
         x = x.view(-1, 1024)
 
@@ -98,7 +100,8 @@ class TNet64(nn.Module):
 
         iden = Variable(torch.from_numpy(np.eye(self.k).flatten().astype(np.float32))).view(1, self.k * self.k).repeat(
             batchsize, 1)
-
+        if x.is_cuda:
+            iden = iden.cuda()
         x += iden
         x = x.view(-1, self.k, self.k)
         return x
@@ -114,30 +117,15 @@ class PointNetFeature(nn.Module):
         @param feature_transform: by default it is set up to False. If switched to True,
         a point feature alignment involving the TNet64() is performed
         """
-        super().__init__()
+        super(PointNetFeature, self).__init__()
         self.tnet_input = TNet3()
 
         self.conv1 = torch.nn.Conv1d(3, 64, 1)
+        self.conv2 = torch.nn.Conv1d(64, 128, 1)
+        self.conv3 = torch.nn.Conv1d(128, 1024, 1)
         self.bn1 = nn.BatchNorm1d(64)
-
-        self.conv3 = torch.nn.Conv1d(64, 64, 1)
-        self.bn3 = nn.BatchNorm1d(64)
-
-        self.conv4 = torch.nn.Conv1d(64, 128, 1)
-        self.bn4 = nn.BatchNorm1d(128)
-
-        self.conv5 = torch.nn.Conv1d(128, 1024, 1)
-        self.bn5 = nn.BatchNorm1d(1024)
-
-
-        # self.main = nn.Sequential(
-        #     torch.nn.Conv1d(64, 128, 1),
-        #     nn.BatchNorm1d(128),
-        #     nn.ReLU(inplace=True),
-        #
-        #     torch.nn.Conv1d(128, 1024, 1),
-        #     nn.BatchNorm1d(1024)
-        # )
+        self.bn2 = nn.BatchNorm1d(128)
+        self.bn3 = nn.BatchNorm1d(1024)
 
         self.global_feat = global_feature
         self.feature_transform = feature_transform
@@ -162,11 +150,8 @@ class PointNetFeature(nn.Module):
             transformed_features = None
 
         point_features = x
-
-        x = F.relu(self.bn3(self.conv3(x)))
-        x = F.relu(self.bn4(self.conv4(x)))
-        x = F.relu(self.bn5(self.conv5(x)))
-
+        x = F.relu(self.bn2(self.conv2(x)))
+        x = self.bn3(self.conv3(x))
         x = torch.max(x, 2, keepdim=True)[0]
         x = x.view(-1, 1024)
 
@@ -189,25 +174,20 @@ class PointNetClassification(nn.Module):
         super(PointNetClassification, self).__init__()
         self.feature_transform = feature_transform
         self.feat = PointNetFeature(global_feature=True, feature_transform=feature_transform)
-
-        self.main = nn.Sequential(
-
-            nn.Linear(1024, 512),
-            nn.BatchNorm1d(512),
-            nn.ReLU(inplace=True),
-
-            nn.Linear(512, 256),
-            nn.Dropout(p=0.3),
-            nn.BatchNorm1d(256),
-            nn.ReLU(inplace=True),
-
-            nn.Linear(256, n_classes)
-        )
+        self.fc1 = nn.Linear(1024, 512)
+        self.fc2 = nn.Linear(512, 256)
+        self.fc3 = nn.Linear(256, n_classes)
+        self.dropout = nn.Dropout(p=0.3)
+        self.bn1 = nn.BatchNorm1d(512)
+        self.bn2 = nn.BatchNorm1d(256)
+        self.relu = nn.ReLU()
 
     def forward(self, x):
         x, trans, trans_feat = self.feat(x)
-        x = self.main(x)
-        #x = F.log_softmax(x, dim=1)
+        x = F.relu(self.bn1(self.fc1(x)))
+        x = F.relu(self.bn2(self.dropout(self.fc2(x))))
+        x = self.fc3(x)
+        x = F.log_softmax(x, dim=1)
         return x #F.log_softmax(x, dim=1), trans, trans_feat
 
 
@@ -218,9 +198,9 @@ def feature_transform_regularizer(transformed_matrix):
     points feature transformation matrix to be close to an orthogonal matrix.
     
     @param transformed_matrix: matrix coming from the TNet64 alignment network
-    @return: regularizaed softmax loss
+    @return: regularized softmax loss
     """
     d = transformed_matrix.size()[1]
     Identity_matrix = torch.eye(d)[None, :, :]
-    loss = torch.mean(torch.norm(torch.bmm(transformed_matrix, transformed_matrix.transpose(2, 1)) - Identity_matrix, dim=(1, 2)))
+    loss = torch.mean(torch.norm(torch.bmm(transformed_matrix, transformed_matrix.transpose(2, 1)) - Identity_matrix, dim =(1, 2)))
     return loss

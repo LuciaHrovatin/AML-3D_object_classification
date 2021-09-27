@@ -5,6 +5,7 @@ from solver import PointNetClassifier
 
 
 def main():
+
     ################## DATA INGESTION ###################
 
     model_data = DataIngestion()
@@ -28,22 +29,25 @@ def main():
     num_classes = model_data.num_classes()
 
     # it is possible to change the batch size
-    split = Split(32)
+    split = Split(120)
 
     # generate train/test set
     split.train_test()
+
+    ### ? DO we really change the dataset each time?
     train_loader = split.get_train()
     test_loader = split.get_test()
 
     ################## MODEL ###################
 
     # initialize the model
-    model = PointNetClassification(n_classes=num_classes)
+    model = PointNetClassification(n_classes=num_classes, feature_transform=True)
 
     # initialize the image Classifier
     image_classifier = PointNetClassifier(n_epochs=100)
 
     # train and evaluation
+
     image_classifier.train_net(train_loader, test_loader, model)
 
 
