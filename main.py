@@ -34,7 +34,6 @@ def main():
     # generate train/test set
     split.train_test()
 
-    ### ? DO we really change the dataset each time?
     train_loader = split.get_train()
     test_loader = split.get_test()
 

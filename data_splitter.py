@@ -66,23 +66,19 @@ class Split:
         labels = [mapping[ll] for ll in labels]
 
         for index in range(len(images)):
-            # exclude all the point clouds whose numerosity is less than 1024
-            if index in train_index:
+            # exclude all the point clouds whose numerosity is less than n_points
+            if index in train_index and len(images[index]) > self.n_points:
                 train_x.append(images[index])
                 train_y.append(labels[index])
-            elif index in test_index:
+            elif index in test_index and len(images[index]) > self.n_points:
                 test_x.append(images[index])
                 test_y.append(labels[index])
 
         train_y = torch.tensor(train_y)
         test_y = torch.tensor(test_y)
 
-
-        test_x = torch.stack([torch.from_numpy(np.random.choice(len(el), self.n_points, replace=True)) for el in test_x])
-        train_x = torch.stack([torch.from_numpy(np.random.choice(len(el), self.n_points, replace=True)) for el in train_x])
-
-       # test_x = torch.stack([torch.from_numpy(el[:1024]) for el in test_x])
-       # train_x = torch.stack([torch.from_numpy(el[:1024]) for el in train_x])
+        test_x = torch.stack([torch.from_numpy(el[np.random.choice(len(el), self.n_points, replace=True)]) for el in test_x])
+        train_x = torch.stack([torch.from_numpy(el[np.random.choice(len(el), self.n_points, replace=True)]) for el in train_x])
 
         train_set = TensorDataset(train_x, train_y)
         test_set = TensorDataset(test_x, test_y)
