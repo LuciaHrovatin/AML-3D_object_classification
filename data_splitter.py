@@ -19,13 +19,29 @@ class Split:
         proportion 70/30. The objects are randomly sampled, but the resulting sets can be reproduced across
         multiple calls.
         """
-        with open("labels_final.pkl", "rb") as f:
-            labels = pickle.load(f)
-        with open("images_final.pkl", "rb") as f:
-            images = pickle.load(f)
+        # with open("labels_final.pkl", "rb") as f:
+        #     labels = pickle.load(f)
+        # with open("images_final.pkl", "rb") as f:
+        #     images = pickle.load(f)
+
+        #### INIZIA QUA IL SAMPLING DEL SUBSET DI 3000 VISUALIZZAZIONI
+
+        import pandas as pd
+        images = pd.read_pickle("images_final.pkl")  #list of pictures as tensors
+        labels = pd.read_pickle("labels_final.pkl")  #list of labels
+
+        full_df = { "labels": labels,
+            "images": images
+                }
+
+        full_df = pd.DataFrame(full_df)
+        sub_3000 = full_df.sample(n= 3000, replace=False, random_state=42)
+
+        #FINISCE QUI IL SAMPLING
 
         # 70/30 validation set approach with random state to reproduce the output across multiple calls
-        train_index, test_index = train_test_split(range(len(images)), test_size=0.3, random_state=2)
+        # train_index, test_index = train_test_split(range(len(images)), test_size=0.3, random_state=2) # With full dataset
+        train_index, test_index = train_test_split(range(len(sub_3000['images'])), test_size=0.3, random_state=2) # With subset of 3000 images
 
         train_x = []
         train_y = []
