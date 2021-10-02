@@ -35,7 +35,7 @@ class Split:
                 }
 
         full_df = pd.DataFrame(full_df)
-        sub_3000 = full_df.sample(n= 3000, replace=False, random_state=42)
+        sub_3000 = full_df.sample(n= 5000, replace=False, random_state=42)
 
         #FINISCE QUI IL SAMPLING
 
@@ -90,6 +90,7 @@ class Split:
                 test_x.append(images[index])
                 test_y.append(labels[index])
 
+
         train_y = torch.tensor(train_y)
         test_y = torch.tensor(test_y)
 
@@ -98,9 +99,9 @@ class Split:
 
         train_set = TensorDataset(train_x, train_y)
         test_set = TensorDataset(test_x, test_y)
-
-        self.train_loader = DataLoader(train_set, self.batch_size, shuffle=True, num_workers=2)
-        self.test_loader = DataLoader(test_set, self.batch_size, shuffle=False, num_workers=2)
+        self.train_loader = train_set
+        #self.train_loader = DataLoader(train_set, self.batch_size, shuffle=True, num_workers=2)
+        #self.test_loader = DataLoader(test_set, self.batch_size, shuffle=False, num_workers=2)
 
     def get_train(self):
         """

@@ -1,8 +1,10 @@
+from torch.utils.data import DataLoader
+
 from data_ingestion import DataIngestion
 from data_splitter import Split
 from model import PointNetClassification
 from solver import PointNetClassifier
-
+from torch import torch
 
 def main():
 
@@ -35,19 +37,22 @@ def main():
     split.train_test()
 
     train_loader = split.get_train()
-    test_loader = split.get_test()
+    train_loader = DataLoader(train_loader, 120, shuffle=True, num_workers=2)
+    #test_loader = split.get_test()
 
     ################## MODEL ###################
 
     # initialize the model
-    model = PointNetClassification(n_classes=num_classes, feature_transform=True)
+    model = PointNetClassification(n_classes=num_classes, feature_transform=False)
 
     # initialize the image Classifier
     image_classifier = PointNetClassifier(n_epochs=100)
 
+
+
     # train and evaluation
 
-    image_classifier.train_net(train_loader, test_loader, model)
+    image_classifier.train_net(train_loader, model)
 
 
 if __name__ == '__main__':
