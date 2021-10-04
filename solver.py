@@ -18,7 +18,7 @@ def count_parameters(model):
 
 class PointNetClassifier:
     
-    def __init__(self, n_epochs: int, learning_rate=0.0001, feature_transform=False):
+    def __init__(self, n_epochs: int, learning_rate=0.001, feature_transform=False):
         self.n_epochs = n_epochs
         self.learning_rate = learning_rate
         self.feature_transform = feature_transform
@@ -97,11 +97,12 @@ class PointNetClassifier:
             scheduler.step()
             model.eval()
 
-            checkpoint = torch.load("model.pt")
-            model.load_state_dict(checkpoint['model_state_dict'])
-            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-            checkpoint['epoch'] = e+1
-            checkpoint['loss'] = loss_epoch
+            if e % 10 == 0:
+                checkpoint = torch.load("model.pt")
+                model.load_state_dict(checkpoint['model_state_dict'])
+                optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+                checkpoint['epoch'] = e+1
+                checkpoint['loss'] = loss_epoch
 
             # Testing the model
             test_preds = []

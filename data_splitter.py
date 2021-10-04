@@ -4,6 +4,8 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import TensorDataset, DataLoader
 import torch
 import numpy as np
+import pandas as pd
+
 
 class Split:
 
@@ -19,14 +21,7 @@ class Split:
         proportion 70/30. The objects are randomly sampled, but the resulting sets can be reproduced across
         multiple calls.
         """
-        # with open("labels_final.pkl", "rb") as f:
-        #     labels = pickle.load(f)
-        # with open("images_final.pkl", "rb") as f:
-        #     images = pickle.load(f)
 
-        #### INIZIA QUA IL SAMPLING DEL SUBSET DI 3000 VISUALIZZAZIONI
-
-        import pandas as pd
         images = pd.read_pickle("images_final.pkl")  #list of pictures as tensors
         labels = pd.read_pickle("labels_final.pkl")  #list of labels
 
@@ -35,9 +30,8 @@ class Split:
                 }
 
         full_df = pd.DataFrame(full_df)
-        sub_3000 = full_df.sample(n= 5000, replace=False, random_state=42)
+        sub_3000 = full_df.sample(n= 6000, replace=False, random_state=42) # modify this number
 
-        #FINISCE QUI IL SAMPLING
 
         # 70/30 validation set approach with random state to reproduce the output across multiple calls
         # train_index, test_index = train_test_split(range(len(images)), test_size=0.3, random_state=2) # With full dataset
