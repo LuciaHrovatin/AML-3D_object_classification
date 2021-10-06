@@ -30,7 +30,7 @@ class Split:
                 }
 
         full_df = pd.DataFrame(full_df)
-        sub_3000 = full_df.sample(n= 6000, replace=False, random_state=42) # modify this number
+        sub_3000 = full_df.sample(n=3000, replace=False, random_state=50) # modify this number
 
 
         # 70/30 validation set approach with random state to reproduce the output across multiple calls

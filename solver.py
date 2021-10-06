@@ -41,9 +41,8 @@ class PointNetClassifier:
             optimizer.step()
             correct_classification = torch.eq(train_y, torch.max(preds, -1).indices)
             accuracy = torch.sum(correct_classification).float() / train_y.shape[0] * 100
+
             return loss, accuracy
-
-
 
         def test_step(test_x, test_y):
             test_x = torch.transpose(test_x, 2, 1)
@@ -57,7 +56,6 @@ class PointNetClassifier:
         # for the graph
         losses = []
         accuracy_tot = []
-        val = []
 
         checkpoint = torch.save({
             'epoch': 0,
@@ -91,7 +89,7 @@ class PointNetClassifier:
             loss_epoch = sum(batch_loss_value)/len(batch_loss_value)
             accuracy_epoch = sum(batch_accuracy_value)/len(batch_accuracy_value)
 
-            print(str(e + 1) + 'loss:' + str(round(loss_epoch,3)) + ' batch_accuracy:' + str(round(accuracy_epoch,3)))
+            print(str(e + 1) + 'loss:' + str(round(loss_epoch, 3)) + ' batch_accuracy:' + str(round(accuracy_epoch,3)))
             losses.append(statistics.mean(batch_loss_value))
             accuracy_tot.append(statistics.mean(batch_accuracy_value))
             scheduler.step()
@@ -103,11 +101,6 @@ class PointNetClassifier:
                 optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
                 checkpoint['epoch'] = e+1
                 checkpoint['loss'] = loss_epoch
-
-            # Testing the model
-            test_preds = []
-            test_labels = []
-            total_loss = []
 
             # It prints a graph at the end of the entire procedure
             plt.figure(figsize=(10, 5))
@@ -122,7 +115,7 @@ class PointNetClassifier:
             plt.title("Accuracy")
             plt.plot(accuracy_tot, label="train")
             plt.xlabel("n_epochs")
-            plt.ylabel("Loss")
+            plt.ylabel("Accuracy")
             plt.legend()
             plt.show()
 
