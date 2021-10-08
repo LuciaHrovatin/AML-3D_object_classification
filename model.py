@@ -152,6 +152,8 @@ class PointNetFeature(nn.Module):
         point_features = x
         x = F.relu(self.bn2(self.conv2(x)))
         x = self.bn3(self.conv3(x))
+
+        # MAX pooling
         x = torch.max(x, 2, keepdim=True)[0]
         x = x.view(-1, 1024)
 
@@ -174,9 +176,13 @@ class PointNetClassification(nn.Module):
         super(PointNetClassification, self).__init__()
         self.feature_transform = feature_transform
         self.feat = PointNetFeature(global_feature=True, feature_transform=feature_transform)
+
+        # Fully connected layers
         self.fc1 = nn.Linear(1024, 512)
         self.fc2 = nn.Linear(512, 256)
         self.fc3 = nn.Linear(256, n_classes)
+
+        # dropout method with keep ratio 0.7 --> p=0.3
         self.dropout = nn.Dropout(p=0.3)
         self.bn1 = nn.BatchNorm1d(512)
         self.bn2 = nn.BatchNorm1d(256)
@@ -187,6 +193,8 @@ class PointNetClassification(nn.Module):
         x = F.relu(self.bn1(self.fc1(x)))
         x = F.relu(self.bn2(self.dropout(self.fc2(x))))
         x = self.fc3(x)
+
+        # BISOGNA considerarla oppure no?
         x = F.log_softmax(x, dim=1)
         return x #F.log_softmax(x, dim=1), trans, trans_feat
 

@@ -86,13 +86,14 @@ class Split:
 
 
         train_y = torch.tensor(train_y)
-        test_y = torch.tensor(test_y)
+        #test_y = torch.tensor(test_y)
 
-        test_x = torch.stack([torch.from_numpy(el[np.random.choice(len(el), self.n_points, replace=True)]) for el in test_x])
+        # Modified with 1024 random points
+        #test_x = torch.stack([torch.from_numpy(el[np.random.choice(len(el), self.n_points, replace=True)]) for el in test_x])
         train_x = torch.stack([torch.from_numpy(el[np.random.choice(len(el), self.n_points, replace=True)]) for el in train_x])
 
         train_set = TensorDataset(train_x, train_y)
-        test_set = TensorDataset(test_x, test_y)
+        #test_set = TensorDataset(test_x, test_y)
         self.train_loader = train_set
         #self.train_loader = DataLoader(train_set, self.batch_size, shuffle=True, num_workers=2)
         #self.test_loader = DataLoader(test_set, self.batch_size, shuffle=False, num_workers=2)

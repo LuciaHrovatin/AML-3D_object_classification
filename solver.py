@@ -1,6 +1,5 @@
 import statistics
 import torch.optim as optim
-from tqdm import tqdm
 
 from model import *
 import matplotlib.pyplot as plt
@@ -51,7 +50,7 @@ class PointNetClassifier:
             loss = F.nll_loss(preds, test_y)
             return loss, preds
 
-        best_accuracy = 0.0
+        #best_accuracy = 0.0
 
         # for the graph
         losses = []
