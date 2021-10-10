@@ -9,8 +9,7 @@ import pandas as pd
 
 class Split:
 
-    def __init__(self, batch_size: int, n_points=1024):
-        self.batch_size = batch_size
+    def __init__(self, n_points=1024):
         self.train_loader = None
         self.test_loader = None
         self.n_points = n_points
@@ -90,11 +89,14 @@ class Split:
 
         # Modified with 1024 random points
         #test_x = torch.stack([torch.from_numpy(el[np.random.choice(len(el), self.n_points, replace=True)]) for el in test_x])
-        train_x = torch.stack([torch.from_numpy(el[np.random.choice(len(el), self.n_points, replace=True)]) for el in train_x])
+        train_x = torch.stack([torch.from_numpy(el[np.random.choice(len(el), self.n_points, replace=False)]) for el in train_x])
 
         train_set = TensorDataset(train_x, train_y)
         #test_set = TensorDataset(test_x, test_y)
         self.train_loader = train_set
+
+
+
         #self.train_loader = DataLoader(train_set, self.batch_size, shuffle=True, num_workers=2)
         #self.test_loader = DataLoader(test_set, self.batch_size, shuffle=False, num_workers=2)
 

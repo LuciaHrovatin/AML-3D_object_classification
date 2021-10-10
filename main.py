@@ -1,3 +1,4 @@
+import wandb
 from torch.utils.data import DataLoader
 
 from data_ingestion import DataIngestion
@@ -30,31 +31,35 @@ def main():
 
     ################## DATA SPLIT ###################
 
+    wandb.login(key= "5efd59f8e908e1fcc4a11a5654d956330bac1e0b")
+
+
     num_classes = model_data.num_classes()
 
-    # it is possible to change the batch size
-    split = Split(120)
+    split = Split()
 
     # generate train/test set
     split.train_test()
 
-    train_loader = split.get_train()
-    train_loader = DataLoader(train_loader, 120, shuffle=True, num_workers=2)
+    train_loader = split.get_train() # Ottengo l'intero training set
+
+    train_loader = DataLoader(train_loader, 32, shuffle=True, num_workers=2) # Estrazione di 120 casi
     #test_loader = split.get_test()
 
     ################## MODEL ###################
+    # 1. Start a new run
+    wandb.init(project='pointNet-test', entity='aml_2021')
 
     # initialize the model
-    model = PointNetClassification(n_classes=num_classes, feature_transform=False)
+    model = PointNetClassification(n_classes=num_classes, feature_transform=True)
 
     # initialize the image Classifier
     image_classifier = PointNetClassifier(n_epochs=100)
 
-
-
     # train and evaluation
 
     image_classifier.train_net(train_loader, model)
+
 
 
 if __name__ == '__main__':

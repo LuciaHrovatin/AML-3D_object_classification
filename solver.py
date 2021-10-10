@@ -1,5 +1,6 @@
 import statistics
 import torch.optim as optim
+import wandb
 
 from model import *
 import matplotlib.pyplot as plt
@@ -24,6 +25,14 @@ class PointNetClassifier:
 
     def train_net(self, train_loader, model):
 
+
+
+        # 2. Save model inputs and hyperparameters
+        config = wandb.config
+        config.learning_rate = self.learning_rate
+
+        # 3. Log gradients and model parameters
+        wandb.watch(model)
         optimizer = torch.optim.Adam(model.parameters(), lr=self.learning_rate, betas=(0.9, 0.999))
         scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.5)
 
@@ -32,9 +41,20 @@ class PointNetClassifier:
             optimizer.zero_grad()
 
             train_x = torch.transpose(train_x, 2, 1)
-            preds = model(train_x.float())
+            preds, trans = model(train_x.float())
+            import open3d as o3d
 
-            loss = F.nll_loss(preds.requires_grad_(True), train_y)
+            #pcd = o3d.geometry.PointCloud()
+            #pcd.points = o3d.utility.Vector3dVector(train_x[0].T)
+            #pcd.paint_uniform_color([0, 0, 0])
+            #o3d.visualization.draw_geometries([pcd])
+
+            # MODIFICARE LA LOSS FUNCTION?
+            loss = F.cross_entropy(preds, train_y)
+            if trans is not None:
+                loss_reg = feature_transform_regularizer(trans)
+                loss += 0.5 * loss_reg
+
             loss.backward()
 
             optimizer.step()
@@ -56,13 +76,6 @@ class PointNetClassifier:
         losses = []
         accuracy_tot = []
 
-        checkpoint = torch.save({
-            'epoch': 0,
-            'model_state_dict': model.state_dict(),
-            'optimizer_state_dict': optimizer.state_dict(),
-            'loss': 0.0,
-        }, "model.pt")
-
         for e in range(self.n_epochs):
             model.train()
 
@@ -76,13 +89,15 @@ class PointNetClassifier:
                 # for the graph
                 batch_loss_value.append(batch_loss.item())
                 batch_accuracy_value.append(batch_accuracy.item())
-
-                if i % 1 == 0:
+                wandb.log({"loss": batch_loss,
+                           "accuracy": batch_accuracy})
+                if i % 10 == 0:
                     print('[{0}-{1:03}] loss: {2:0.05}, batch_accuracy: {3:0.03}'.format(
                         e + 1, i,
                         batch_loss.detach().numpy(),
                         batch_accuracy.detach().numpy()))
-                if i == 0:
+
+                if e == 0 and i == 0:
                     print('number of model parameters {}'.format(count_parameters(model)))
 
             loss_epoch = sum(batch_loss_value)/len(batch_loss_value)
@@ -91,16 +106,11 @@ class PointNetClassifier:
             print(str(e + 1) + 'loss:' + str(round(loss_epoch, 3)) + ' batch_accuracy:' + str(round(accuracy_epoch,3)))
             losses.append(statistics.mean(batch_loss_value))
             accuracy_tot.append(statistics.mean(batch_accuracy_value))
+
+
             scheduler.step()
             model.eval()
-
-            if e % 10 == 0:
-                checkpoint = torch.load("model.pt")
-                model.load_state_dict(checkpoint['model_state_dict'])
-                optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-                checkpoint['epoch'] = e+1
-                checkpoint['loss'] = loss_epoch
-
+            """
             # It prints a graph at the end of the entire procedure
             plt.figure(figsize=(10, 5))
             plt.title("Training Loss")
@@ -117,7 +127,7 @@ class PointNetClassifier:
             plt.ylabel("Accuracy")
             plt.legend()
             plt.show()
-
+            """
 
 """
     def test_net(self, test_loader, model):

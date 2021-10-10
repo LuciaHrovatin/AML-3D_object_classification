@@ -195,8 +195,11 @@ class PointNetClassification(nn.Module):
         x = self.fc3(x)
 
         # BISOGNA considerarla oppure no?
-        x = F.log_softmax(x, dim=1)
-        return x #F.log_softmax(x, dim=1), trans, trans_feat
+        #x = F.log_softmax(x, dim=1)
+        if self.feature_transform:
+            return x, trans
+        else:
+            return x, None
 
 
 def feature_transform_regularizer(transformed_matrix):
