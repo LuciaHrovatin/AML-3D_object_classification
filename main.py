@@ -1,10 +1,11 @@
+import os
+from wandb.wandb_torch import torch
 import wandb
 from torch.utils.data import DataLoader
 from data_ingestion import DataIngestion
 from data_splitter import Split
 from model import PointNetClassification
 from solver import PointNetClassifier
-from torch import torch
 import argparse
 
 def main():
@@ -15,6 +16,7 @@ def main():
                             help="Train/test split size in percentage. Input the test size.")
     arg_parser.add_argument("-b", "--buffer", required=False, default=32, type=int, help="Buffer size")
     arg_parser.add_argument("-e", "--epochs", required=False, default=100, type=int, help="Epochs")
+    arg_parser.add_argument("-lr", "--learning_rate", required=False, default=0.001, type=float, help="Learning rate")
 
     args = arg_parser.parse_args()
 
@@ -48,10 +50,8 @@ def main():
     # generate train/test set
     split.train_test()
 
-    train_loader = split.get_train() # Ottengo l'intero training set
-
-    train_loader = DataLoader(train_loader, args.buffer, shuffle=True, num_workers=2) # Estrazione di 120 casi
-    #test_loader = split.get_test()
+    train_loader = DataLoader(split.get_train() , args.buffer, shuffle=True, num_workers=2)
+    test_loader = DataLoader(split.get_test() , args.buffer, shuffle = True, num_workers=2)
 
     ################## MODEL ###################
     # 1. Start a new run
@@ -61,13 +61,16 @@ def main():
     model = PointNetClassification(n_classes=num_classes, feature_transform=True)
 
     # initialize the image Classifier
-    image_classifier = PointNetClassifier(args.epochs)
+    image_classifier = PointNetClassifier(args.epochs, args.learning_rate)
 
     # train and evaluation
 
     image_classifier.train_net(train_loader, model)
 
     # AGGIUNGERE SAVE MODEL!!
+    torch.save(model, os.getcwd())
+
+    image_classifier.test_net(test_loader, model)
 
 
 
