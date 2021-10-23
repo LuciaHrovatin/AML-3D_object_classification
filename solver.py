@@ -26,7 +26,6 @@ class PointNetClassifier:
     def train_net(self, train_loader, model):
 
 
-
         # 2. Save model inputs and hyperparameters
         config = wandb.config
         config.learning_rate = self.learning_rate
@@ -42,12 +41,13 @@ class PointNetClassifier:
 
             train_x = torch.transpose(train_x, 2, 1)
             preds, trans = model(train_x.float())
+
             import open3d as o3d
 
-            #pcd = o3d.geometry.PointCloud()
-            #pcd.points = o3d.utility.Vector3dVector(train_x[0].T)
-            #pcd.paint_uniform_color([0, 0, 0])
-            #o3d.visualization.draw_geometries([pcd])
+            pcd = o3d.geometry.PointCloud()
+            pcd.points = o3d.utility.Vector3dVector(train_x[0].T)
+            pcd.paint_uniform_color([0, 0, 0])
+            o3d.visualization.draw_geometries([pcd])
 
             # MODIFICARE LA LOSS FUNCTION?
             loss = F.cross_entropy(preds, train_y)
@@ -106,7 +106,6 @@ class PointNetClassifier:
             print(str(e + 1) + 'loss:' + str(round(loss_epoch, 3)) + ' batch_accuracy:' + str(round(accuracy_epoch,3)))
             losses.append(statistics.mean(batch_loss_value))
             accuracy_tot.append(statistics.mean(batch_accuracy_value))
-
 
             scheduler.step()
             model.eval()

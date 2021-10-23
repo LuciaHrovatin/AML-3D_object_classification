@@ -1,15 +1,22 @@
 import wandb
 from torch.utils.data import DataLoader
-
 from data_ingestion import DataIngestion
 from data_splitter import Split
 from model import PointNetClassification
 from solver import PointNetClassifier
 from torch import torch
+import argparse
 
 def main():
+    
+    arg_parser = argparse.ArgumentParser(description="AML 2021 - 3D object classification")
+    arg_parser.add_argument("-p", "--points", required=False, default=1024, type=int, help="Number of points per Point Cloud")
+    arg_parser.add_argument("-t", "--train_test_split", required=False, default=0.3, type=float,
+                            help="Train/test split size in percentage. Input the test size.")
+    arg_parser.add_argument("-b", "--buffer", required=False, default=32, type=int, help="Buffer size")
+    arg_parser.add_argument("-e", "--epochs", required=False, default=100, type=int, help="Epochs")
 
-
+    args = arg_parser.parse_args()
 
     ################## DATA INGESTION ###################
 
@@ -43,7 +50,7 @@ def main():
 
     train_loader = split.get_train() # Ottengo l'intero training set
 
-    train_loader = DataLoader(train_loader, 32, shuffle=True, num_workers=2) # Estrazione di 120 casi
+    train_loader = DataLoader(train_loader, args.buffer, shuffle=True, num_workers=2) # Estrazione di 120 casi
     #test_loader = split.get_test()
 
     ################## MODEL ###################
@@ -54,11 +61,13 @@ def main():
     model = PointNetClassification(n_classes=num_classes, feature_transform=True)
 
     # initialize the image Classifier
-    image_classifier = PointNetClassifier(n_epochs=100)
+    image_classifier = PointNetClassifier(args.epochs)
 
     # train and evaluation
 
     image_classifier.train_net(train_loader, model)
+
+    # AGGIUNGERE SAVE MODEL!!
 
 
 
