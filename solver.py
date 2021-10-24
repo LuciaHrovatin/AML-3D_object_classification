@@ -39,7 +39,7 @@ class PointNetClassifier:
             train_x = torch.transpose(train_x, 2, 1)
             preds, trans = model(train_x.float())
 
-
+            from open3d.geometry.PointCloud import select_down_sample
 
             # POINTCLOUD REPRESENTATION
             pcd = o3d.geometry.PointCloud()
