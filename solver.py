@@ -2,7 +2,7 @@ import statistics
 import torch.optim as optim
 import wandb
 from model import *
-
+import open3d as o3d
 
 def count_parameters(model):
     """
@@ -39,11 +39,27 @@ class PointNetClassifier:
             train_x = torch.transpose(train_x, 2, 1)
             preds, trans = model(train_x.float())
 
-            import open3d as o3d
 
+
+            # POINTCLOUD REPRESENTATION
             pcd = o3d.geometry.PointCloud()
             pcd.points = o3d.utility.Vector3dVector(train_x[0].T)
-            pcd.paint_uniform_color([0, 0, 0])
+
+            # outlier removal
+            voxel_down_pcd = pcd.voxel_down_sample(voxel_size=0.02)
+            cl, ind = voxel_down_pcd.remove_statistical_outlier(nb_neighbors=20, std_ratio=2.0)
+
+            def display_inlier_outlier(cloud, ind):
+                inlier_cloud = cloud.select_down_sample(ind)
+                outlier_cloud = cloud.select_down_sample(ind, invert=True)
+                # showing outliers
+                outlier_cloud.paint_uniform_color([1, 0, 0])
+                inlier_cloud.paint_uniform_color([0.8, 0.8, 0.8])
+                o3d.visualization.draw_geometries([inlier_cloud, outlier_cloud])
+
+            display_inlier_outlier(voxel_down_pcd, ind)
+
+            # pcd.paint_uniform_color([0, 0, 0])
             # o3d.visualization.draw_geometries([pcd])
 
             loss = F.cross_entropy(preds, train_y)
