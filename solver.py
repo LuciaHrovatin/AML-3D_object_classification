@@ -39,16 +39,19 @@ class PointNetClassifier:
             train_x = torch.transpose(train_x, 2, 1)
             preds, trans = model(train_x.float())
 
-            from open3d.geometry.PointCloud import select_down_sample
-
             # POINTCLOUD REPRESENTATION
             pcd = o3d.geometry.PointCloud()
             pcd.points = o3d.utility.Vector3dVector(train_x[0].T)
 
             # outlier removal
-            voxel_down_pcd = pcd.voxel_down_sample(voxel_size=0.02)
-            cl, ind = voxel_down_pcd.remove_statistical_outlier(nb_neighbors=20, std_ratio=2.0)
+            #voxel_down_pcd = o3d.geometry.VoxelGrid.create_from_point_cloud(pcd, voxel_size=0.05)
+            #voxel_down_pcd = pcd.voxel_down_sample(voxel_size=0.001)
+            cl, ind = pcd.remove_statistical_outlier(nb_neighbors=10, std_ratio=1.0)
 
+            #cl.paint_uniform_color([0, 0, 0])
+            #o3d.visualization.draw_geometries([cl])
+
+            """    
             def display_inlier_outlier(cloud, ind):
                 inlier_cloud = cloud.select_down_sample(ind)
                 outlier_cloud = cloud.select_down_sample(ind, invert=True)
@@ -56,11 +59,11 @@ class PointNetClassifier:
                 outlier_cloud.paint_uniform_color([1, 0, 0])
                 inlier_cloud.paint_uniform_color([0.8, 0.8, 0.8])
                 o3d.visualization.draw_geometries([inlier_cloud, outlier_cloud])
+            """
+            #display_inlier_outlier(pcd, ind)
 
-            display_inlier_outlier(voxel_down_pcd, ind)
-
-            # pcd.paint_uniform_color([0, 0, 0])
-            # o3d.visualization.draw_geometries([pcd])
+            cl.paint_uniform_color([0, 0, 0])
+            o3d.visualization.draw_geometries([cl])
 
             loss = F.cross_entropy(preds, train_y)
             if trans is not None:

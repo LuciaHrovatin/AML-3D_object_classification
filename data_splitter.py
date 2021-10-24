@@ -91,7 +91,7 @@ class Split:
 
         # Modified with 1024 random points
         test_x = torch.stack(
-            [torch.from_numpy(el[np.random.choice(len(el), self.n_points, replace=True)]) for el in test_x])
+            [torch.from_numpy(el[np.random.choice(len(el), self.n_points, replace=False)]) for el in test_x])
         train_x = torch.stack(
             [torch.from_numpy(el[np.random.choice(len(el), self.n_points, replace=False)]) for el in train_x])
 
