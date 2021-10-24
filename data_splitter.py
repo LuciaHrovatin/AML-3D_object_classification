@@ -115,3 +115,6 @@ class Split:
         @return: DataLoader containing the test_set and the corresponding labels (i.e., ground truth).
         """
         return self.test_loader
+
+# TODO#
+# Usare il interquantile range per calcolare la Tukey's fences nei dati ed eliminare gli outliers.
