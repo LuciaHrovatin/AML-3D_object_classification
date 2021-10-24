@@ -34,7 +34,7 @@ class TNet3(nn.Module):
         self.bn5 = nn.BatchNorm1d(256)
 
     def forward(self, x):
-        batchsize = x.size()[0]
+        batch_size = x.size()[0]
         x = F.relu(self.bn1(self.conv1(x)))
         x = F.relu(self.bn2(self.conv2(x)))
         x = F.relu(self.bn3(self.conv3(x)))
@@ -46,7 +46,7 @@ class TNet3(nn.Module):
         x = self.fc3(x)
 
         iden = Variable(torch.from_numpy(np.array([1, 0, 0, 0, 1, 0, 0, 0, 1]).astype(np.float32))).view(1, 9).repeat(
-            batchsize, 1)
+            batch_size, 1)
         if x.is_cuda:
             iden = iden.cuda()
         x += iden
@@ -213,5 +213,5 @@ def feature_transform_regularizer(transformed_matrix):
     """
     d = transformed_matrix.size()[1]
     Identity_matrix = torch.eye(d)[None, :, :]
-    loss = torch.mean(torch.norm(torch.bmm(transformed_matrix, transformed_matrix.transpose(2, 1)) - Identity_matrix, dim =(1, 2)))
+    loss = torch.mean(torch.norm(torch.bmm(transformed_matrix, transformed_matrix.transpose(2, 1)) - Identity_matrix, dim=(1, 2)))
     return loss

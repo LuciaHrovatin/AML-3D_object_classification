@@ -1,9 +1,7 @@
 import statistics
 import torch.optim as optim
 import wandb
-
 from model import *
-import matplotlib.pyplot as plt
 
 
 def count_parameters(model):
@@ -17,14 +15,13 @@ def count_parameters(model):
 
 
 class PointNetClassifier:
-    
+
     def __init__(self, n_epochs: int, learning_rate, feature_transform=False):
         self.n_epochs = n_epochs
         self.learning_rate = learning_rate
         self.feature_transform = feature_transform
 
     def train_net(self, train_loader, model):
-
 
         # 2. Save model inputs and hyperparameters
         config = wandb.config
@@ -47,7 +44,7 @@ class PointNetClassifier:
             pcd = o3d.geometry.PointCloud()
             pcd.points = o3d.utility.Vector3dVector(train_x[0].T)
             pcd.paint_uniform_color([0, 0, 0])
-            #o3d.visualization.draw_geometries([pcd])
+            # o3d.visualization.draw_geometries([pcd])
 
             loss = F.cross_entropy(preds, train_y)
             if trans is not None:
@@ -90,10 +87,10 @@ class PointNetClassifier:
                 if e == 0 and i == 0:
                     print('number of model parameters {}'.format(count_parameters(model)))
 
-            loss_epoch = sum(batch_loss_value)/len(batch_loss_value)
-            accuracy_epoch = sum(batch_accuracy_value)/len(batch_accuracy_value)
+            loss_epoch = sum(batch_loss_value) / len(batch_loss_value)
+            accuracy_epoch = sum(batch_accuracy_value) / len(batch_accuracy_value)
 
-            print(str(e + 1) + 'loss:' + str(round(loss_epoch, 3)) + ' batch_accuracy:' + str(round(accuracy_epoch,3)))
+            print(str(e + 1) + 'loss:' + str(round(loss_epoch, 3)) + ' batch_accuracy:' + str(round(accuracy_epoch, 3)))
             losses.append(statistics.mean(batch_loss_value))
             accuracy_tot.append(statistics.mean(batch_accuracy_value))
 

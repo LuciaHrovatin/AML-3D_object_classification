@@ -8,10 +8,11 @@ from model import PointNetClassification
 from solver import PointNetClassifier
 import argparse
 
+
 def main():
-    
     arg_parser = argparse.ArgumentParser(description="AML 2021 - 3D object classification")
-    arg_parser.add_argument("-p", "--points", required=False, default=1024, type=int, help="Number of points per Point Cloud")
+    arg_parser.add_argument("-p", "--points", required=False, default=1024, type=int,
+                            help="Number of points per Point Cloud")
     arg_parser.add_argument("-t", "--train_test_split", required=False, default=0.3, type=float,
                             help="Train/test split size in percentage. Input the test size.")
     arg_parser.add_argument("-b", "--buffer", required=False, default=32, type=int, help="Buffer size")
@@ -20,8 +21,7 @@ def main():
 
     args = arg_parser.parse_args()
 
-    ################## DATA INGESTION ###################
-
+    # ------- DATA INGESTION -------
     model_data = DataIngestion()
 
     # If "lego_dataset.zip" uncomment the following lines (1, 2, 4):
@@ -38,22 +38,21 @@ def main():
     # 4. Transform data in point clouds and save them in binary files
     # model_data.transform_binary("./images_final")
 
-    ################## DATA SPLIT ###################
+    # Personal key to visualise the process on wandb
+    wandb.login(key="5efd59f8e908e1fcc4a11a5654d956330bac1e0b")
 
-    wandb.login(key= "5efd59f8e908e1fcc4a11a5654d956330bac1e0b")
-
-
+    # ------- DATA SPLIT -------
+    # define the number of classes
     num_classes = model_data.num_classes()
-
-    split = Split()
-
-    # generate train/test set
+    # Slit in train/test sets
+    split = Split(n_points=args.points, test_size=args.train_test_split)
     split.train_test()
 
-    train_loader = DataLoader(split.get_train() , args.buffer, shuffle=True, num_workers=2)
-    test_loader = DataLoader(split.get_test() , args.buffer, shuffle = True, num_workers=2)
+    # Define the data loaders
+    train_loader = DataLoader(split.get_train(), args.buffer, shuffle=True, num_workers=2)
+    test_loader = DataLoader(split.get_test(), args.buffer, shuffle=False, num_workers=2)
 
-    ################## MODEL ###################
+    # ------- MODEL -------
     # 1. Start a new run
     wandb.init(project='pointNet-test', entity='aml_2021')
 
@@ -64,14 +63,12 @@ def main():
     image_classifier = PointNetClassifier(args.epochs, args.learning_rate)
 
     # train and evaluation
-
     image_classifier.train_net(train_loader, model)
 
-    # AGGIUNGERE SAVE MODEL!!
+    # Save model
     torch.save(model, os.getcwd())
 
     image_classifier.test_net(test_loader, model)
-
 
 
 if __name__ == '__main__':
