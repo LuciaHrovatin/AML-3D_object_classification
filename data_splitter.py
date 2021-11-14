@@ -35,13 +35,13 @@ class Split:
         # Not full dataset
 
         if not self.n_sample:
-            train_index, test_index = train_test_split(range(len(full_df["images"])), test_size=self.test_size,
+            train_index, test_index = train_test_split(range(len(full_df["images"])),
+                                                       test_size=self.test_size,
                                                        random_state=2)
         else:
             sub = full_df.sample(n=self.n_sample, replace=False, random_state=50)
             train_index, test_index = train_test_split(range(len(sub['images'])), test_size=self.test_size,
                                                        random_state=2)  # With subset of 3000 images
-
 
         train_x = []
         train_y = []
@@ -82,12 +82,13 @@ class Split:
         labels = [mapping[ll] for ll in labels]
 
         for index in range(len(images)):
+            no_outliers = remove_outliers(images[index])
             # exclude all the point clouds whose numerosity is less than n_points
-            if index in train_index and len(images[index]) > self.n_points:
-                train_x.append(images[index])
+            if index in train_index and len(no_outliers) > self.n_points:
+                train_x.append(no_outliers)
                 train_y.append(labels[index])
-            elif index in test_index and len(images[index]) > self.n_points:
-                test_x.append(images[index])
+            elif index in test_index and len(no_outliers) > self.n_points:
+                test_x.append(no_outliers)
                 test_y.append(labels[index])
 
         train_y = torch.tensor(train_y)
@@ -120,5 +121,14 @@ class Split:
         """
         return self.test_loader
 
-# TODO#
-# Usare il interquantile range per calcolare la Tukey's fences nei dati ed eliminare gli outliers.
+
+def median(x):
+    m, n = x.shape
+    middle = np.arange((m - 1) >> 1, (m >> 1) + 1)
+    x = np.partition(x, middle, axis=0)
+    return x[middle].mean(axis=0)
+
+def remove_outliers(data, thresh=2.0):
+    m = median(data)
+    s = np.abs(data - m)
+    return data[(s < median(s) * thresh).all(axis=1)]

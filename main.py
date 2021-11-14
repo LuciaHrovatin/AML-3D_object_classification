@@ -1,4 +1,3 @@
-import os
 from wandb.wandb_torch import torch
 import wandb
 from torch.utils.data import DataLoader
@@ -67,9 +66,7 @@ def main():
     # train and evaluation
     image_classifier.train_net(train_loader, model)
 
-    # Save model
-    torch.save(model, os.getcwd())
-
+    # test evaluation
     image_classifier.test_net(test_loader, model)
 
 

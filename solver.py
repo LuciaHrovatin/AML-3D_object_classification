@@ -1,8 +1,9 @@
+import os
 import statistics
 import torch.optim as optim
 import wandb
 from model import *
-import open3d as o3d
+
 
 def count_parameters(model):
     """
@@ -38,32 +39,6 @@ class PointNetClassifier:
 
             train_x = torch.transpose(train_x, 2, 1)
             preds, trans = model(train_x.float())
-
-            # POINTCLOUD REPRESENTATION
-            #pcd = o3d.geometry.PointCloud()
-            #pcd.points = o3d.utility.Vector3dVector(train_x[0].T)
-
-            # outlier removal
-            #voxel_down_pcd = o3d.geometry.VoxelGrid.create_from_point_cloud(pcd, voxel_size=0.05)
-            #voxel_down_pcd = pcd.voxel_down_sample(voxel_size=0.001)
-            #cl, ind = pcd.remove_statistical_outlier(nb_neighbors=10, std_ratio=1.0)
-
-            #cl.paint_uniform_color([0, 0, 0])
-            #o3d.visualization.draw_geometries([cl])
-
-            """    
-            def display_inlier_outlier(cloud, ind):
-                inlier_cloud = cloud.select_down_sample(ind)
-                outlier_cloud = cloud.select_down_sample(ind, invert=True)
-                # showing outliers
-                outlier_cloud.paint_uniform_color([1, 0, 0])
-                inlier_cloud.paint_uniform_color([0.8, 0.8, 0.8])
-                o3d.visualization.draw_geometries([inlier_cloud, outlier_cloud])
-            """
-            #display_inlier_outlier(pcd, ind)
-
-            #cl.paint_uniform_color([0, 0, 0])
-            #o3d.visualization.draw_geometries([cl])
 
             loss = F.cross_entropy(preds, train_y)
             if trans is not None:
@@ -115,32 +90,42 @@ class PointNetClassifier:
 
             scheduler.step()
             model.eval()
-        return model
+
+        return torch.save(model.state_dict(), os.path.join(os.getcwd(), 'model.pth'))
 
     def test_net(self, test_loader, model):
+
         def test_step(test_x, test_y):
             test_x = torch.transpose(test_x, 2, 1)
             with torch.no_grad():
                 preds, trans = model(test_x.float())
             loss = F.cross_entropy(preds, test_y)
-            return loss, preds
+            num_correct = sum(torch.argmax(preds, dim=1) == test_y)
+            return loss, num_correct
 
+        test_loss = 0.0
+        test_acc = 0.0
         for i, batch in enumerate(test_loader):
+
             data, labels = batch
-            batch_loss, preds = test_step(data, labels)
+            batch_loss, num_correct = test_step(data, labels)
+            test_loss += batch_loss/len(test_loader)
+            test_acc += num_correct/len(test_loader)
 
-            batch_preds = torch.max(preds, -1).indices
-            test_preds.append(batch_preds)
-            test_labels.append(labels)
+            #batch_preds = torch.max(preds, -1).indices
 
-            test_preds = torch.cat(test_preds, dim=0).view(-1)
-            test_labels = torch.cat(test_labels, dim=0).view(-1)
+            #test_preds.append(batch_preds)
+            #test_labels.append(labels)
 
-            assert test_preds.shape[0] == test_labels.shape[0]
+            #test_preds = torch.cat(test_preds, dim=0).view(-1)
+            #test_labels = torch.cat(test_labels, dim=0).view(-1)
 
-            correct_classifications = torch.eq(test_labels, test_preds).sum()
-            test_accuracy = (correct_classifications / test_labels.shape[0]) * 100
-            if test_accuracy > best_accuracy:
-                best_accuracy = test_accuracy
+            #assert test_preds.shape[0] == test_labels.shape[0]
 
-        print("Final accuracy:{}".format(best_accuracy))
+            #correct_classifications = torch.eq(test_labels, test_preds).sum()
+            #test_accuracy = (correct_classifications / test_labels.shape[0]) * 100
+            #if test_accuracy > best_accuracy:
+            #    best_accuracy = test_accuracy
+
+        print("Final accuracy:{}".format(test_acc))
+        print("Final loss:{}".format(test_loss))
