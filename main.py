@@ -13,6 +13,8 @@ def main():
     arg_parser = argparse.ArgumentParser(description="AML 2021 - 3D object classification")
     arg_parser.add_argument("-p", "--points", required=False, default=1024, type=int,
                             help="Number of points per Point Cloud")
+    arg_parser.add_argument("-s", "--db_sample", required=False, default=0, type=int,
+                            help="Randomly sample the original dataset. The default model consider all the cases, by setting the parameter to 0.")
     arg_parser.add_argument("-t", "--train_test_split", required=False, default=0.3, type=float,
                             help="Train/test split size in percentage. Input the test size.")
     arg_parser.add_argument("-b", "--buffer", required=False, default=32, type=int, help="Buffer size")
@@ -45,7 +47,7 @@ def main():
     # define the number of classes
     num_classes = model_data.num_classes()
     # Slit in train/test sets
-    split = Split(n_points=args.points, test_size=args.train_test_split)
+    split = Split(n_points=args.points, test_size=args.train_test_split, sample=args.db_sample)
     split.train_test()
 
     # Define the data loaders

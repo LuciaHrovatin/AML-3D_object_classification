@@ -40,13 +40,13 @@ class PointNetClassifier:
             preds, trans = model(train_x.float())
 
             # POINTCLOUD REPRESENTATION
-            pcd = o3d.geometry.PointCloud()
-            pcd.points = o3d.utility.Vector3dVector(train_x[0].T)
+            #pcd = o3d.geometry.PointCloud()
+            #pcd.points = o3d.utility.Vector3dVector(train_x[0].T)
 
             # outlier removal
             #voxel_down_pcd = o3d.geometry.VoxelGrid.create_from_point_cloud(pcd, voxel_size=0.05)
             #voxel_down_pcd = pcd.voxel_down_sample(voxel_size=0.001)
-            cl, ind = pcd.remove_statistical_outlier(nb_neighbors=10, std_ratio=1.0)
+            #cl, ind = pcd.remove_statistical_outlier(nb_neighbors=10, std_ratio=1.0)
 
             #cl.paint_uniform_color([0, 0, 0])
             #o3d.visualization.draw_geometries([cl])
@@ -62,8 +62,8 @@ class PointNetClassifier:
             """
             #display_inlier_outlier(pcd, ind)
 
-            cl.paint_uniform_color([0, 0, 0])
-            o3d.visualization.draw_geometries([cl])
+            #cl.paint_uniform_color([0, 0, 0])
+            #o3d.visualization.draw_geometries([cl])
 
             loss = F.cross_entropy(preds, train_y)
             if trans is not None:
@@ -115,6 +115,7 @@ class PointNetClassifier:
 
             scheduler.step()
             model.eval()
+        return model
 
     def test_net(self, test_loader, model):
         def test_step(test_x, test_y):

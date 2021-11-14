@@ -7,11 +7,12 @@ import pandas as pd
 
 class Split:
 
-    def __init__(self, n_points: int, test_size: float):
+    def __init__(self, n_points: int, test_size: float, sample: int):
         self.train_loader = None
         self.test_loader = None
         self.n_points = n_points
         self.test_size = test_size
+        self.n_sample = sample
 
     def train_test(self):
         """
@@ -28,16 +29,19 @@ class Split:
                    }
 
         full_df = pd.DataFrame(full_df)
-        # n_full = len(full_df.index) # da implementare
-
-        sub_3000 = full_df.sample(n=3000, replace=False, random_state=50)
-
         # 70/30 validation set approach with random state to reproduce the output across multiple calls
         # With full dataset
-        # train_index, test_index = train_test_split(range(len(images)), test_size=0.3, random_state=2)
+        #
         # Not full dataset
-        train_index, test_index = train_test_split(range(len(sub_3000['images'])), test_size=self.test_size,
-                                                   random_state=2)  # With subset of 3000 images
+
+        if not self.n_sample:
+            train_index, test_index = train_test_split(range(len(full_df["images"])), test_size=self.test_size,
+                                                       random_state=2)
+        else:
+            sub = full_df.sample(n=self.n_sample, replace=False, random_state=50)
+            train_index, test_index = train_test_split(range(len(sub['images'])), test_size=self.test_size,
+                                                       random_state=2)  # With subset of 3000 images
+
 
         train_x = []
         train_y = []
