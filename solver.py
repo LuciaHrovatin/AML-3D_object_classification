@@ -103,29 +103,14 @@ class PointNetClassifier:
             num_correct = sum(torch.argmax(preds, dim=1) == test_y)
             return loss, num_correct
 
-        test_loss = 0.0
+        test_loss = []
         test_acc = 0.0
         for i, batch in enumerate(test_loader):
 
             data, labels = batch
             batch_loss, num_correct = test_step(data, labels)
-            test_loss += batch_loss/len(test_loader)
+            test_loss.append(batch_loss/len(test_loader))
             test_acc += num_correct/len(test_loader)
 
-            #batch_preds = torch.max(preds, -1).indices
-
-            #test_preds.append(batch_preds)
-            #test_labels.append(labels)
-
-            #test_preds = torch.cat(test_preds, dim=0).view(-1)
-            #test_labels = torch.cat(test_labels, dim=0).view(-1)
-
-            #assert test_preds.shape[0] == test_labels.shape[0]
-
-            #correct_classifications = torch.eq(test_labels, test_preds).sum()
-            #test_accuracy = (correct_classifications / test_labels.shape[0]) * 100
-            #if test_accuracy > best_accuracy:
-            #    best_accuracy = test_accuracy
-
         print("Final accuracy:{}".format(test_acc))
-        print("Final loss:{}".format(test_loss))
+        print("Final loss:{}".format(np.mean(test_loss)))
