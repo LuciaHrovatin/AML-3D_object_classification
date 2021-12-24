@@ -108,7 +108,7 @@ class TNet64(nn.Module):
 
 
 class PointNetFeature(nn.Module):
-    def __init__(self, global_feature: True, feature_transform: False):
+    def __init__(self, global_feature: True, feature_transform):
         """
         Internal network whose input has shape [batch_size, 1024, 3]. It is structured
         following the directives of the original PointNet architecture.
@@ -165,7 +165,7 @@ class PointNetFeature(nn.Module):
 
 
 class PointNetClassification(nn.Module):
-    def __init__(self, n_classes: int, feature_transform=False):
+    def __init__(self, n_classes: int, feature_transform):
         """
         Last Multi-Layer Perceptron classifier trained  on the shape global features for block classification.
 

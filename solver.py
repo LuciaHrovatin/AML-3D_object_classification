@@ -17,7 +17,7 @@ def count_parameters(model):
 
 class PointNetClassifier:
 
-    def __init__(self, n_epochs: int, learning_rate, feature_transform=False):
+    def __init__(self, n_epochs: int, learning_rate, feature_transform):
         self.n_epochs = n_epochs
         self.learning_rate = learning_rate
         self.feature_transform = feature_transform

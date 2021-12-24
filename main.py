@@ -19,7 +19,7 @@ def main():
     arg_parser.add_argument("-b", "--buffer", required=False, default=32, type=int, help="Buffer size")
     arg_parser.add_argument("-e", "--epochs", required=False, default=100, type=int, help="Epochs")
     arg_parser.add_argument("-lr", "--learning_rate", required=False, default=0.001, type=float, help="Learning rate")
-
+    arg_parser.add_argument("-ft", "--feature_transform", required=False, default=True, type=bool, help="Feature transformation")
     args = arg_parser.parse_args()
 
     # ------- DATA INGESTION -------
@@ -58,10 +58,10 @@ def main():
     wandb.init(project='pointNet-test', entity='aml_2021')
 
     # initialize the model
-    model = PointNetClassification(n_classes=num_classes, feature_transform=True)
+    model = PointNetClassification(n_classes=num_classes, feature_transform=args.feature_transform)
 
     # initialize the image Classifier
-    image_classifier = PointNetClassifier(args.epochs, args.learning_rate)
+    image_classifier = PointNetClassifier(args.epochs, args.learning_rate, args.feature_transform)
 
     # train and evaluation
     image_classifier.train_net(train_loader, model)

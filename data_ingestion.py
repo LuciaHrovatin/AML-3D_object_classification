@@ -3,8 +3,8 @@ import os
 import pickle
 from zipfile import ZipFile
 import numpy as np
-import cv2
-import open3d as o3d
+#import cv2
+#import open3d as o3d
 
 
 class DataIngestion:
