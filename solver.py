@@ -85,6 +85,7 @@ class PointNetClassifier:
             accuracy_epoch = sum(batch_accuracy_value) / len(batch_accuracy_value)
 
             print(str(e + 1) + 'loss:' + str(round(loss_epoch, 3)) + ' batch_accuracy:' + str(round(accuracy_epoch, 3)))
+            
             losses.append(statistics.mean(batch_loss_value))
             accuracy_tot.append(statistics.mean(batch_accuracy_value))
 
