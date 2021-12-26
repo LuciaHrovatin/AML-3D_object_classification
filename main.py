@@ -50,8 +50,8 @@ def main():
     split.train_test()
 
     # Define the data loaders
-    train_loader = DataLoader(split.get_train(), args.buffer, shuffle=True, num_workers=2)
-    test_loader = DataLoader(split.get_test(), args.buffer, shuffle=False, num_workers=2)
+    train_loader = DataLoader(split.get_train(), args.buffer, shuffle=True)
+    test_loader = DataLoader(split.get_test(), args.buffer, shuffle=False)
 
     # ------- MODEL -------
     # 1. Start a new run
