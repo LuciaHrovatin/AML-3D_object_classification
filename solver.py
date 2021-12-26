@@ -112,6 +112,16 @@ class PointNetClassifier:
             batch_loss, num_correct = test_step(data, labels)
             test_loss.append(batch_loss/len(test_loader))
             test_acc += num_correct/len(test_loader)
+        """
+        Ipotetico codice da aggiungere :) 
+        wandb.init(config=args)
 
+        best_accuracy = 0
+        for epoch in range(1, args.epochs + 1):
+            test_loss, test_accuracy = test()
+            if (test_accuracy > best_accuracy):
+                wandb.run.summary["best_accuracy"] = test_accuracy
+                best_accuracy = test_accuracy
+        """
         print("Final accuracy:{}".format(test_acc))
         print("Final loss:{}".format(np.mean(test_loss)))
