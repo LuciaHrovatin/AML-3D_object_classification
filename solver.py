@@ -48,6 +48,8 @@ class PointNetClassifier:
             loss.backward()
 
             optimizer.step()
+            scheduler.step() # spostato qui lo step dello scheduler
+
             correct_classification = torch.eq(train_y, torch.max(preds, -1).indices)
             accuracy = torch.sum(correct_classification).float() / train_y.shape[0] * 100
 
@@ -89,14 +91,17 @@ class PointNetClassifier:
             losses.append(statistics.mean(batch_loss_value))
             accuracy_tot.append(statistics.mean(batch_accuracy_value))
 
-            scheduler.step()
-            model.eval()
+            #scheduler.step()
+            #model.eval()
 
         return torch.save(model.state_dict(), os.path.join(os.getcwd(), 'model.pth'))
 
     def test_net(self, test_loader, model):
 
         def test_step(test_x, test_y):
+
+            model.eval() # mancava nella fcn di test?
+
             test_x = torch.transpose(test_x, 2, 1)
             with torch.no_grad():
                 preds, trans = model(test_x.float())
@@ -112,16 +117,31 @@ class PointNetClassifier:
             batch_loss, num_correct = test_step(data, labels)
             test_loss.append(batch_loss/len(test_loader))
             test_acc += num_correct/len(test_loader)
-        """
-        Ipotetico codice da aggiungere :) 
+
+        
+        '''#Ipotetico codice da aggiungere :) 
         wandb.init(config=args)
 
-        best_accuracy = 0
+        best_accuracy = 0.0
         for epoch in range(1, args.epochs + 1):
             test_loss, test_accuracy = test()
             if (test_accuracy > best_accuracy):
                 wandb.run.summary["best_accuracy"] = test_accuracy
-                best_accuracy = test_accuracy
-        """
+                best_accuracy = test_accuracy'''
+        
         print("Final accuracy:{}".format(test_acc))
         print("Final loss:{}".format(np.mean(test_loss)))
+
+
+''' def get_class_weight(sample_per_class, n_classes = num_classes, power = 1):
+    """ Finds the weighted importance of the sample on the total number of classes
+    @param sample_per_class: number of samples of each class
+    @param num_classes: total number of classes (default: num_classes = 10)
+    @param power: exponent of np power (default: 1)
+    
+    @return float: weight of class sample """
+
+    weight_sample = 1.0/ np.array( np.power(sample_per_class, power))
+    weight_sample = weight_sample/ np.sum(weight_sample) * num_classes
+
+    return weight_sample '''
