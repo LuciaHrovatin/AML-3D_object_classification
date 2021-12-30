@@ -48,20 +48,15 @@ class PointNetClassifier:
             loss.backward()
 
             optimizer.step()
-            scheduler.step() # spostato qui lo step dello scheduler
 
             correct_classification = torch.eq(train_y, torch.max(preds, -1).indices)
             accuracy = torch.sum(correct_classification).float() / train_y.shape[0] * 100
 
             return loss, accuracy
 
-        # for the graph
-        losses = []
-        accuracy_tot = []
-
         for e in range(self.n_epochs):
             model.train()
-
+            print('Epoch {}, lr {}'.format(e, optimizer.param_groups[0]['lr']))
             # for the graph
             batch_loss_value = []
             batch_accuracy_value = []
@@ -87,12 +82,9 @@ class PointNetClassifier:
             accuracy_epoch = sum(batch_accuracy_value) / len(batch_accuracy_value)
 
             print(str(e + 1) + 'loss:' + str(round(loss_epoch, 3)) + ' batch_accuracy:' + str(round(accuracy_epoch, 3)))
-            
-            losses.append(statistics.mean(batch_loss_value))
-            accuracy_tot.append(statistics.mean(batch_accuracy_value))
 
-            #scheduler.step()
-            #model.eval()
+            scheduler.step()
+            model.eval()
 
         return torch.save(model.state_dict(), os.path.join(os.getcwd(), 'model.pth'))
 
