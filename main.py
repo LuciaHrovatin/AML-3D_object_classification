@@ -61,7 +61,7 @@ def main():
     model = PointNetClassification(n_classes=num_classes, feature_transform=args.feature_transform)
 
     # initialize the image Classifier
-    image_classifier = PointNetClassifier(args.epochs, args.learning_rate, args.feature_transform)
+    image_classifier = PointNetClassifier(args.epochs, args.learning_rate, args.feature_transform, num_classes)
 
     # train and evaluation
     image_classifier.train_net(train_loader, model)
