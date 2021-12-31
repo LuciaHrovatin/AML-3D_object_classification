@@ -44,8 +44,8 @@ class PointNetClassifier:
         wandb.watch(model)
         optimizer = torch.optim.Adam(model.parameters(), lr=self.learning_rate, betas=(0.9, 0.999))
         scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.5)
-        #weights = get_class_weight(list(dict(Counter(torch.utils.data.Subset(train_loader))).values()), self.n_classes, power=1)
-
+        y = np.concatenate([y for x, y in train_loader], axis=0)
+        weights = get_class_weight(list(dict(Counter(y)).values()), self.n_classes, power=1)
 
         def train_step(train_x, train_y):
 
@@ -54,7 +54,7 @@ class PointNetClassifier:
             train_x = torch.transpose(train_x, 2, 1)
             preds, trans = model(train_x.float())
 
-            loss = F.cross_entropy(preds, train_y)
+            loss = F.cross_entropy(preds, train_y, weight = torch.FloatTensor(weights))
             if trans is not None:
                 loss_reg = feature_transform_regularizer(trans)
                 loss += 0.5 * loss_reg
@@ -97,11 +97,13 @@ class PointNetClassifier:
             print(str(e + 1) + 'loss:' + str(round(loss_epoch, 3)) + ' batch_accuracy:' + str(round(accuracy_epoch, 3)))
 
             scheduler.step()
-            # model.eval() 
+            model.eval() 
 
         return torch.save(model.state_dict(), os.path.join(os.getcwd(), 'model.pth'))
 
     def test_net(self, test_loader, model):
+        y = np.concatenate([y for x, y in test_loader], axis=0)
+        weights = get_class_weight(list(dict(Counter(y)).values()), self.n_classes, power=1)
 
         def test_step(test_x, test_y):
 
@@ -110,7 +112,7 @@ class PointNetClassifier:
             test_x = torch.transpose(test_x, 2, 1)
             with torch.no_grad():
                 preds, trans = model(test_x.float())
-            loss = F.cross_entropy(preds, test_y)
+            loss = F.cross_entropy(preds, test_y, torch.FloatTensor(weights))
             num_correct = sum(torch.argmax(preds, dim=1) == test_y)
             return loss, num_correct
 
