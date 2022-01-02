@@ -97,7 +97,7 @@ class PointNetClassifier:
             loss_epoch = sum(batch_loss_value) / len(batch_loss_value)
             accuracy_epoch = sum(batch_accuracy_value) / len(batch_accuracy_value)
 
-            print(str(e + 1) + ' loss:' + str(round(loss_epoch, 3)) + ' batch_accuracy:' + str(round(accuracy_epoch, 3)))
+            print(f'{e + 1} loss: {round(loss_epoch, 3)} batch_accuracy: {round(accuracy_epoch, 3)}')
 
             scheduler.step()
             model.eval() 
@@ -133,6 +133,6 @@ class PointNetClassifier:
                 test_acc = best
         
         print("Final accuracy:{}".format(test_acc))
-        print("Final loss:{}".format(np.mean(test_loss)))
+        print("Final loss:{}".format(np.mean(test_loss)/10))
 
 
