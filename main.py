@@ -20,6 +20,7 @@ def main():
     arg_parser.add_argument("-e", "--epochs", required=False, default=100, type=int, help="Epochs")
     arg_parser.add_argument("-lr", "--learning_rate", required=False, default=0.001, type=float, help="Learning rate")
     arg_parser.add_argument("-ft", "--feature_transform", required=False, default=True, type=bool, help="Feature transformation")
+    arg_parser.add_argument("-bal", "--balance", required=False, default=False, type=bool, help="Consider class weights to balance dataset")
     args = arg_parser.parse_args()
 
     # ------- DATA INGESTION -------
@@ -40,7 +41,8 @@ def main():
     # model_data.transform_binary("./images_final")
 
     # Personal key to visualise the process on wandb
-    wandb.login(key="5efd59f8e908e1fcc4a11a5654d956330bac1e0b")
+    #wandb.login(key="5efd59f8e908e1fcc4a11a5654d956330bac1e0b") # Lucia
+    wandb.login(key="61e20dfd6f284322c67042765b193af1c64046ae") # Emma
 
     # ------- DATA SPLIT -------
     # define the number of classes
@@ -61,7 +63,7 @@ def main():
     model = PointNetClassification(n_classes=num_classes, feature_transform=args.feature_transform)
 
     # initialize the image Classifier
-    image_classifier = PointNetClassifier(args.epochs, args.learning_rate, args.feature_transform, num_classes)
+    image_classifier = PointNetClassifier(args.epochs, args.learning_rate, args.feature_transform, args.balance, num_classes)
 
     # train and evaluation
     image_classifier.train_net(train_loader, model)

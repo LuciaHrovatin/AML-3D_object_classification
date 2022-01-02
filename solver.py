@@ -28,10 +28,11 @@ def get_class_weight(sample_per_class, n_classes, power = 1):
 
 class PointNetClassifier:
 
-    def __init__(self, n_epochs: int, learning_rate, feature_transform, n_class: int):
+    def __init__(self, n_epochs: int, learning_rate, feature_transform, balance, n_class: int):
         self.n_epochs = n_epochs
         self.learning_rate = learning_rate
         self.feature_transform = feature_transform
+        self.balance = balance
         self.n_classes = n_class 
 
     def train_net(self, train_loader, model):
@@ -45,7 +46,9 @@ class PointNetClassifier:
         optimizer = torch.optim.Adam(model.parameters(), lr=self.learning_rate, betas=(0.9, 0.999))
         scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.5)
         y = np.concatenate([y for x, y in train_loader], axis=0)
-        weights = get_class_weight(list(dict(Counter(y)).values()), self.n_classes, power=1)
+
+        if self.balance:
+            weights = get_class_weight(list(dict(Counter(y)).values()), self.n_classes, power=1)
 
         def train_step(train_x, train_y):
 
@@ -54,7 +57,7 @@ class PointNetClassifier:
             train_x = torch.transpose(train_x, 2, 1)
             preds, trans = model(train_x.float())
 
-            loss = F.cross_entropy(preds, train_y, weight = torch.FloatTensor(weights))
+            loss = F.cross_entropy(preds, train_y, weight = torch.FloatTensor(weights) if self.balance else None)
             if trans is not None:
                 loss_reg = feature_transform_regularizer(trans)
                 loss += 0.5 * loss_reg
@@ -70,7 +73,7 @@ class PointNetClassifier:
 
         for e in range(self.n_epochs):
             model.train()
-            print('Epoch {}, lr {}'.format(e, optimizer.param_groups[0]['lr']))
+            print('Epoch {}, lr {}'.format(e+1, optimizer.param_groups[0]['lr']))
             
             batch_loss_value = []
             batch_accuracy_value = []
@@ -94,7 +97,7 @@ class PointNetClassifier:
             loss_epoch = sum(batch_loss_value) / len(batch_loss_value)
             accuracy_epoch = sum(batch_accuracy_value) / len(batch_accuracy_value)
 
-            print(str(e + 1) + 'loss:' + str(round(loss_epoch, 3)) + ' batch_accuracy:' + str(round(accuracy_epoch, 3)))
+            print(str(e + 1) + ' loss:' + str(round(loss_epoch, 3)) + ' batch_accuracy:' + str(round(accuracy_epoch, 3)))
 
             scheduler.step()
             model.eval() 
@@ -103,7 +106,9 @@ class PointNetClassifier:
 
     def test_net(self, test_loader, model):
         y = np.concatenate([y for x, y in test_loader], axis=0)
-        weights = get_class_weight(list(dict(Counter(y)).values()), self.n_classes, power=1)
+        
+        if self.balance:
+            weights = get_class_weight(list(dict(Counter(y)).values()), self.n_classes, power=1)
 
         def test_step(test_x, test_y):
 
@@ -112,7 +117,7 @@ class PointNetClassifier:
             test_x = torch.transpose(test_x, 2, 1)
             with torch.no_grad():
                 preds, trans = model(test_x.float())
-            loss = F.cross_entropy(preds, test_y, torch.FloatTensor(weights))
+            loss = F.cross_entropy(preds, test_y, torch.FloatTensor(weights) if self.balance else None)
             num_correct = sum(torch.argmax(preds, dim=1) == test_y)
             return loss, num_correct
 
