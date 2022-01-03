@@ -133,6 +133,6 @@ class PointNetClassifier:
                 best_acc = test_acc
         
         print("Final accuracy:{}".format(best_acc))
-        print("Final loss:{}".format(np.mean(test_loss)))
+        print("Final loss:{}".format(sum(test_loss)/len(test_loss)))
 
 
