@@ -19,8 +19,8 @@ def main():
     arg_parser.add_argument("-b", "--buffer", required=False, default=32, type=int, help="Buffer size")
     arg_parser.add_argument("-e", "--epochs", required=False, default=100, type=int, help="Epochs")
     arg_parser.add_argument("-lr", "--learning_rate", required=False, default=0.001, type=float, help="Learning rate")
-    arg_parser.add_argument("-ft", "--feature_transform", required=False, default=True, type=bool, help="Feature transformation")
-    arg_parser.add_argument("-bal", "--balance", required=False, default=False, type=bool, help="Consider class weights to balance dataset")
+    arg_parser.add_argument("-ft", "--feature_transform", required=False, default=True, type=bool, help="Feature transformation network")
+    arg_parser.add_argument("-bal", "--balance", required=False, default=False, type=bool, help="Consider class cardinality to balance the dataset")
     args = arg_parser.parse_args()
 
     # ------- DATA INGESTION -------

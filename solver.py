@@ -28,7 +28,7 @@ def get_class_weight(sample_per_class, n_classes, power = 1):
 
 class PointNetClassifier:
 
-    def __init__(self, n_epochs: int, learning_rate, feature_transform, balance, n_class: int):
+    def __init__(self, n_epochs: int, learning_rate: float, feature_transform:bool, balance: bool, n_class: int):
         self.n_epochs = n_epochs
         self.learning_rate = learning_rate
         self.feature_transform = feature_transform
@@ -122,17 +122,22 @@ class PointNetClassifier:
             return loss, num_correct
 
         test_loss = []
-        test_acc = 0.0
+        best_acc = 0.0
         for i, batch in enumerate(test_loader):
 
             data, labels = batch
-            batch_loss, num_correct = test_step(data, labels)
-            test_loss.append(batch_loss/len(test_loader))
-            best = num_correct/len(test_loader)
-            if best > test_acc: 
-                test_acc = best
+            batch_loss, test = test_step(data, labels)
+            test_loss.append(batch_loss) 
+            test_acc = test/len(labels)
+            if test_acc > best_acc: 
+                best_acc = test_acc
         
+<<<<<<< HEAD
         print("Final accuracy:{}".format(test_acc))
         print("Final loss:{}".format(np.mean(test_loss)/10))
+=======
+        print("Final accuracy:{}".format(best_acc))
+        print("Final loss:{}".format(sum(test_loss)/len(test_loss)))
+>>>>>>> 77996794f73e4e03503ea2d1535812e6a731630f
 
 
