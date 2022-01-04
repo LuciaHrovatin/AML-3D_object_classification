@@ -143,5 +143,7 @@ The backend code structure is composed by:
 ├── model.py
 ├── solver.py
 ├── requirements.txt
+├── labels.pkl
+├── images.pkl
 └── main.py
 ```
