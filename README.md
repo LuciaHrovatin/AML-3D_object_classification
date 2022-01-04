@@ -124,6 +124,10 @@ An overview of all the hyperparameters and their description can be obtained by 
 + python3 main.py --help 
 ``` 
 
+# Architecture structure 
+
+
+
 # Code structure
 
 The backend code structure is composed by:
@@ -147,3 +151,4 @@ The backend code structure is composed by:
 ├── images.pkl
 └── main.py
 ```
+
