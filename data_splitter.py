@@ -5,6 +5,27 @@ import numpy as np
 import pandas as pd
 
 
+def median(x):
+    """
+    Computes the median of the points in a 3d Euclidean Space 
+    (n-dimensional vector). 
+    @return: the median value  
+    """
+    m, n = x.shape
+    middle = np.arange((m - 1) >> 1, (m >> 1) + 1)
+    x = np.partition(x, middle, axis=0)
+    return x[middle].mean(axis=0)
+
+def remove_outliers(data, thresh=2.0):
+    """
+    Exploits the geometric median to identify outliers 
+    in 3d Euclidean Space and exclude them. 
+    @return: cleaned Point Cloud or array 
+    """
+    m = median(data)
+    s = np.abs(data - m)
+    return data[(s < median(s) * thresh).all(axis=1)]
+
 class Split:
 
     def __init__(self, n_points: int, test_size: float, sample: int):
@@ -29,16 +50,14 @@ class Split:
                    }
 
         full_df = pd.DataFrame(full_df)
-        # 70/30 validation set approach with random state to reproduce the output across multiple calls
-        # With full dataset
-        #
-        # Not full dataset
 
         if not self.n_sample:
+            # full dataset 
             train_index, test_index = train_test_split(range(len(full_df["images"])),
                                                        test_size=self.test_size,
                                                        random_state=2)
         else:
+            # not full dataset 
             sub = full_df.sample(n=self.n_sample, replace=False, random_state=50)
             train_index, test_index = train_test_split(range(len(sub['images'])), test_size=self.test_size,
                                                        random_state=2)  # With subset of 3000 images
@@ -48,6 +67,7 @@ class Split:
         test_x = []
         test_y = []
 
+        # mapping each label to an integer number between 0 to 29  
         mapping = {'10b': 0,
                    '21': 1,
                    '2291': 2,
@@ -82,7 +102,9 @@ class Split:
         labels = [mapping[ll] for ll in labels]
 
         for index in range(len(images)):
+            # removing the outliers
             no_outliers = remove_outliers(images[index])
+
             # exclude all the point clouds whose numerosity is less than n_points
             if index in train_index and len(no_outliers) > self.n_points:
                 train_x.append(no_outliers)
@@ -94,7 +116,7 @@ class Split:
         train_y = torch.tensor(train_y)
         test_y = torch.tensor(test_y)
 
-        # Modified with 1024 random points
+        # Populated with n random points
         test_x = torch.stack(
             [torch.from_numpy(el[np.random.choice(len(el), self.n_points, replace=False)]) for el in test_x])
         train_x = torch.stack(
@@ -108,7 +130,6 @@ class Split:
     def get_train(self):
         """
         When called, it returns the train_loader previously stored.
-
         @return: DataLoader containing the train_set and the corresponding labels (i.e., ground truth).
         """
         return self.train_loader
@@ -116,19 +137,9 @@ class Split:
     def get_test(self):
         """
         When called, it returns the test_loader previously stored.
-        
         @return: DataLoader containing the test_set and the corresponding labels (i.e., ground truth).
         """
         return self.test_loader
 
 
-def median(x):
-    m, n = x.shape
-    middle = np.arange((m - 1) >> 1, (m >> 1) + 1)
-    x = np.partition(x, middle, axis=0)
-    return x[middle].mean(axis=0)
 
-def remove_outliers(data, thresh=2.0):
-    m = median(data)
-    s = np.abs(data - m)
-    return data[(s < median(s) * thresh).all(axis=1)]
