@@ -124,9 +124,10 @@ An overview of all the hyperparameters and their description can be obtained by 
 + python3 main.py --help 
 ``` 
 
-# Architecture structure 
-
-
+# 3D Object Classification Architecture with PointNet
+![Architecture](https://github.com/LuciaHrovatin/AML-3D_object_classification/blob/dbd2a1ccf972f2cabdf8b28f9dda8cdc87e1ac29/docs/architecture.png)
+The system transforms the initial scenes by splitting them into frames. Each Lego block is displayed in
+identical frames: an RGB picture and a depth map. A Point Cloud is generated and initialises the PointNet classification network. It takes *n* points as input, applies input (and feature) transformations, aggregates point features by max-pooling and outputs the classification scores for the *k* classe
 
 # Code structure
 
@@ -147,8 +148,9 @@ The backend code structure is composed by:
 ├── model.py
 ├── solver.py
 ├── requirements.txt
-├── labels.pkl
-├── images.pkl
+├── docs
+|   ├── architecture.png 
+|   └── report.pdf 
 └── main.py
 ```
 
