@@ -7,9 +7,8 @@ from model import PointNetClassification
 from solver import PointNetClassifier
 import argparse
 import pandas as pd
-from collections import Counter 
+from collections import Counter
 from pprint import pprint
-
 
 def main():
     arg_parser = argparse.ArgumentParser(description="AML 2021 - 3D object classification")
@@ -43,22 +42,20 @@ def main():
     # 4. Transform data in point clouds and save them in binary files
     # model_data.transform_binary("./images_final")
 
-    # If pikle files already available start the model 
+    # 5. If pickle files already available start the model
 
     # Personal key to visualise the process on wandb
-    #wandb.login(key="5efd59f8e908e1fcc4a11a5654d956330bac1e0b") 
-    wandb.login(key="61e20dfd6f284322c67042765b193af1c64046ae") 
+    wandb.login(key="insert_your_key_here") # 
 
     # ------- DATA SPLIT -------
-
     # check for imbalanced dataset
     if args.balance:
         data = pd.read_pickle("labels_final.pkl")
         pprint(Counter(data))
 
+
     # define the number of classes
     num_classes = model_data.num_classes()
-
     # Slit in train/test sets
     split = Split(n_points=args.points, test_size=args.train_test_split, sample=args.db_sample)
     split.train_test()
