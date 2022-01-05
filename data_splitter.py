@@ -37,8 +37,8 @@ class Split:
 
     def train_test(self):
         """
-        Splits the dataset stored in images_final.pkl in a training and a validation set with
-        proportion 70/30. The objects are randomly sampled, but the resulting sets can be reproduced across
+        Splits the dataset stored in images_final.pkl in a training and a validation set with a given
+        proportion (default 70/30). The objects are randomly sampled, but the resulting sets can be reproduced across
         multiple calls.
         """
 
@@ -60,14 +60,14 @@ class Split:
             # not full dataset 
             sub = full_df.sample(n=self.n_sample, replace=False, random_state=50)
             train_index, test_index = train_test_split(range(len(sub['images'])), test_size=self.test_size,
-                                                       random_state=2)  # With subset of 3000 images
+                                                       random_state=2)
 
         train_x = []
         train_y = []
         test_x = []
         test_y = []
 
-        # mapping each label to an integer number between 0 to 29  
+        # mapping each class label to an integer number between 0 to 29  
         mapping = {'10b': 0,
                    '21': 1,
                    '2291': 2,

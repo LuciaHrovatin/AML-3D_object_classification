@@ -67,7 +67,10 @@ The project can be run starting from different datasets stored in zipped folders
 Download the [lego_dataset.zip](https://drive.google.com/file/d/1fohALgsFKM8VXY1pxoBkeANy_f52IdtL/view?usp=sharing) and save it in the project directory. Uncomment the lines specified in the `main.py` file.   
 
 ### Option 2: "images_final.zip"  
-Download the cleaned dataset from [images_final.zip](https://drive.google.com/file/d/10B4uLcfnGG-srzVUV8F2Lq3v_a9kPoz1/view?usp=sharing) and save it in the project directory. Uncomment the lines specified in the `main.py` file.   
+Download the cleaned dataset from [images_final.zip](https://drive.google.com/file/d/10B4uLcfnGG-srzVUV8F2Lq3v_a9kPoz1/view?usp=sharing) and save it in the project directory. Uncomment the lines specified in the `main.py` file.
+
+### Option 3: "images.pkl" and "labels.pkl"
+Download the already-elaborated files [images.pkl](https://drive.google.com/file/d/1CdL_l_6IUfLe5UmuaQ9wPBmuMFW91Xo4/view?usp=sharing) and [labels.pkl](https://drive.google.com/file/d/1Hu-puF7YU50AH6Iq8IMJnC3Scag2Oov6/view?usp=sharing) and save them in the project directory. Do not uncomment any line.
 
 ### Run the script 
 Having the virtual environment and the zip folder set up (either option 1 or 2), a last step must be performed. To start the entire architecture with the default hyperparameters, type in the command line: 

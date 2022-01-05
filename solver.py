@@ -136,5 +136,3 @@ class PointNetClassifier:
         
         print("Final accuracy:{}".format(best_acc))
         print("Final loss:{}".format(best_loss))
-
-
