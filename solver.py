@@ -97,7 +97,7 @@ class PointNetClassifier:
             loss_epoch = sum(batch_loss_value) / len(batch_loss_value)
             accuracy_epoch = sum(batch_accuracy_value) / len(batch_accuracy_value)
 
-            print(f'{e + 1} loss: {round(loss_epoch, 3)} batch_accuracy: {round(accuracy_epoch, 3)}')
+            print(str(e + 1) + ' loss:' + str(round(loss_epoch, 3)) + ' batch_accuracy:' + str(round(accuracy_epoch, 3)))
 
             scheduler.step()
             model.eval() 
@@ -121,23 +121,18 @@ class PointNetClassifier:
             num_correct = sum(torch.argmax(preds, dim=1) == test_y)
             return loss, num_correct
 
-        test_loss = []
+        best_loss = 0.0
         best_acc = 0.0
         for i, batch in enumerate(test_loader):
 
             data, labels = batch
-            batch_loss, test = test_step(data, labels)
-            test_loss.append(batch_loss) 
+            b_loss, test = test_step(data, labels)
+            batch_loss = b_loss/len(labels)
+            if best_loss == 0.0 or best_loss > batch_loss:
+                best_loss = batch_loss 
             test_acc = test/len(labels)
             if test_acc > best_acc: 
                 best_acc = test_acc
         
-<<<<<<< HEAD
-        print("Final accuracy:{}".format(test_acc))
-        print("Final loss:{}".format(np.mean(test_loss)/10))
-=======
         print("Final accuracy:{}".format(best_acc))
-        print("Final loss:{}".format(sum(test_loss)/len(test_loss)))
->>>>>>> 77996794f73e4e03503ea2d1535812e6a731630f
-
-
+        print("Final loss:{}".format(best_loss))
