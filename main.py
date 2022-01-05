@@ -43,7 +43,7 @@ def main():
     # 4. Transform data in point clouds and save them in binary files
     # model_data.transform_binary("./images_final")
 
-    # If pikle files already available start the model 
+    # 5. If pikle files already available start the model 
 
     # Personal key to visualise the process on wandb
     #wandb.login(key="5efd59f8e908e1fcc4a11a5654d956330bac1e0b") 
